@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LegalHUB | Master Control Center</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #ff5011;
+            --secondary: hsl(210, 10%, 23%);
+            --bg-dark: #0d0d0d;
+            --bg-darker: #050505;
+            --bg-card: hsl(242, 14%, 12%);
+            --bg-hover: hsl(242, 14%, 16%);
+            
+            --text-main: hsl(242, 8%, 98%);
+            --text-muted: hsl(242, 8%, 70%);
+            --border: rgba(255, 80, 17, 0.2);
+            
+            --success: #51cf66;
+            --warning: #ffd43b;
+            --danger: #ef4444;
+            
+            --gradient-1: linear-gradient(135deg, var(--primary) 0%, #ff7a33 100%);
+            --gradient-card: linear-gradient(135deg, rgba(255, 80, 17, 0.05) 0%, rgba(255, 122, 51, 0.02) 100%);
+            
+            --shadow-glow: 0 0 30px rgba(255, 80, 17, 0.25);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            --font-primary: 'Inter', sans-serif;
+            --font-code: 'Fira Code', monospace;
+            --font-tech: 'Orbitron', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-primary);
+            overflow: hidden; 
+        }
+
+        /* --- Background Effects --- */
+        #bg-effects {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 0;
+            background-image: linear-gradient(rgba(255, 80, 17, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 80, 17, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        
+        .glow-orb {
+            position: absolute; width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(255,80,17,0.08) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%; top: -100px; right: -100px;
+        }
+
+        /* --- Main Layout --- */
+        .app-container {
+            display: flex; height: 100vh; position: relative; z-index: 1;
+        }
+
+        /* --- Sidebar --- */
+        #sidebar {
+            width: 280px; background-color: var(--bg-darker); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; transition: transform var(--transition);
+        }
+
+        .nav-menu::-webkit-scrollbar { width: 6px; }
+        .nav-menu::-webkit-scrollbar-thumb { background: rgba(255,80,17,0.3); border-radius: 10px; }
+
+        .sidebar-brand {
+            text-align: center; margin-bottom: 10px; padding-bottom: 24px; padding-top: 30px;
+            border-bottom: 1px solid var(--border); white-space: nowrap;
+        }
+
+        .brand-logo {
+            width: 90px; height: 90px; display: block; margin: 0 auto 15px auto;
+            filter: drop-shadow(0 0 5px rgba(255, 80, 17, 0.3)); cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); object-fit: contain;
+        }
+        .brand-logo:hover { filter: drop-shadow(0 0 15px var(--primary)) brightness(1.2) blur(0.2px); transform: scale(1.1) translateY(-5px); }
+
+        .brand-text { font-family: var(--font-tech); font-size: 1.2rem; font-weight: 700; letter-spacing: 1px; display: block; }
+
+        .nav-menu { flex: 1; padding: 20px 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            color: var(--text-muted); text-decoration: none; border-radius: 8px;
+            transition: var(--transition); cursor: pointer; font-weight: 500;
+        }
+        .nav-item:hover { background-color: var(--bg-hover); color: var(--text-main); }
+        .nav-item.active {
+            background: var(--gradient-card); border: 1px solid var(--border);
+            color: var(--primary); box-shadow: inset 0 0 20px rgba(255,80,17,0.05);
+        }
+
+        .nav-section-title {
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--text-muted); margin: 16px 0 8px 16px; font-weight: 700; opacity: 0.5;
+        }
+
+        /* Sidebar Footer */
+        .sidebar-footer {
+            padding: 24px;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            margin-top: auto;
+        }
+
+        .version-tag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: var(--font-tech);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            transition: var(--transition);
+            cursor: pointer;
+            letter-spacing: 1px;
+        }
+
+        .version-tag:hover {
+            color: var(--primary);
+        }
+
+        /* --- Main Content Area --- */
+        #main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+        header {
+            height: 80px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(13, 13, 13, 0.8); backdrop-filter: blur(10px);
+        }
+
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .mobile-toggle { display: none; background: none; border: none; color: var(--text-main); cursor: pointer; }
+
+        .progress-container { display: flex; align-items: center; gap: 16px; width: 300px; }
+        .progress-bar { flex: 1; height: 8px; background: var(--bg-card); border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .progress-fill { height: 100%; background: var(--gradient-1); width: 0%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--primary); }
+        .progress-text { font-family: var(--font-code); font-size: 0.85rem; color: var(--primary); }
+
+        /* iframe container */
+        #content-frame {
+            width: 100%; height: 100%; border: none; flex: 1; background: transparent;
+        }
+
+        /* Modals */
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: flex;
+            align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: var(--transition);
+        }
+        #modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-content {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+            width: 90%; max-width: 600px; padding: 32px; transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #modal-overlay.active .modal-content { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; }
+        .modal-close:hover { color: var(--text-main); }
+
+        /* Mobile Sidebar Close Button */
+        .mobile-close-btn {
+            display: none;
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            z-index: 10;
+            padding: 6px;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+        
+        .mobile-close-btn:hover {
+            color: var(--primary);
+            background: rgba(255, 80, 17, 0.1);
+        }
+
+        /* Adjusted max-width to 1024px to cover iPads and medium tablets */
+        @media (max-width: 1024px) {
+            #sidebar { position: fixed; height: 100vh; transform: translateX(-100%); z-index: 100; }
+            #sidebar.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.5); }
+            .mobile-toggle { display: block; }
+            .mobile-close-btn { display: block; }
+            .progress-container { width: 150px; }
+        }
+
+        /* Module Transition Loader */
+        .module-loader {
+            position: absolute;
+            top: 80px; /* Height of the header */
+            left: 0; right: 0; bottom: 0;
+            background: rgba(13, 13, 13, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .module-loader.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 3px solid rgba(255, 80, 17, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader-text {
+            font-family: var(--font-code);
+            color: var(--primary);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* --- Shared Component Styles (Automatically injected into iframes) --- */
+        .page-header { margin-bottom: 32px; }
+        .page-title { font-family: var(--font-tech); font-size: 2rem; margin-bottom: 8px; color: var(--text-main); }
+        .page-intro { color: var(--text-muted); max-width: 800px; line-height: 1.6; }
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 32px; }
+        
+        .card { background: var(--bg-card); border: 1px solid rgba(255, 80, 17, 0.1); border-radius: 12px; padding: 24px; transition: var(--transition); position: relative; overflow: hidden; }
+        .card:hover { border-color: var(--border); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        .checklist { display: flex; flex-direction: column; gap: 12px; }
+        .check-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid transparent; cursor: pointer; transition: var(--transition); }
+        .check-item:hover { background: rgba(255,255,255,0.05); border-color: rgba(255, 80, 17, 0.1); }
+        .check-item input[type="checkbox"] { appearance: none; width: 20px; height: 20px; border: 2px solid var(--text-muted); border-radius: 4px; background: transparent; cursor: pointer; position: relative; transition: var(--transition); }
+        .check-item input[type="checkbox"]:checked { background: var(--primary); border-color: var(--primary); }
+        .check-item input[type="checkbox"]:checked::after { content: '✓'; position: absolute; color: white; font-size: 14px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .check-item.completed { opacity: 0.6; text-decoration: line-through; }
+        
+        .btn { background: var(--gradient-1); color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: var(--transition); font-family: var(--font-primary); }
+        .btn:hover { box-shadow: 0 0 30px rgba(255, 80, 17, 0.25); transform: translateY(-1px); }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); width: 100%; justify-content: center; }
+        
+        .mb-4 { margin-bottom: 16px; } 
+        .text-sm { font-size: 0.85rem; color: var(--text-muted); }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Form Inputs Refined */
+        .form-group { margin-bottom: 16px; } 
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; } 
+        .form-control { 
+            width: 100%; 
+            background: rgba(0,0,0,0.5); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            padding: 12px 16px; 
+            border-radius: 6px; 
+            color: white; 
+            font-family: var(--font-primary);
+            font-size: 0.95rem;
+            transition: var(--transition);
+            box-sizing: border-box;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(255, 80, 17, 0.2);
+            background: rgba(0,0,0,0.7);
+        }
+        .form-control::placeholder { color: rgba(255,255,255,0.3); }
+
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; } 
+        .badge.warning { background: rgba(255, 212, 59, 0.1); color: var(--warning); border: 1px solid var(--warning); }
+        
+        .video-placeholder { width: 100%; height: 240px; background: #000; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); margin-bottom: 16px; cursor: pointer; transition: var(--transition); position: relative; overflow: hidden; }
+        .video-placeholder:hover { border-color: var(--primary); box-shadow: 0 0 20px rgba(255,80,17,0.1); }
+        .video-placeholder:hover i { transform: scale(1.1); color: var(--primary) !important; transition: var(--transition); }
+    </style>
+</head>
+<body>
+
+    <div id="bg-effects"><div class="glow-orb"></div></div>
+
+    <div class="app-container" id="app">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar">
+            <button id="mobile-close-btn" class="mobile-close-btn"><i data-lucide="x"></i></button>
+            <div class="sidebar-brand">
+                <img src="https://bucket.mlcdn.com/a/3336/3336910/images/289156898072f5b23e67052f6e9cab5c6424f11f.png" alt="LegalHUB Logo" class="brand-logo">
+                <span class="brand-text">LegalHUB</span>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-section-title">Core Modules</div>
+                <!-- Links now use data-url pointing to the specific files -->
+                <a class="nav-item active" data-url="app/overview/overview.html">
+                    <i data-lucide="layout-dashboard"></i> Overview
+                </a>
+                <a class="nav-item" data-url="app/commercial-profile/profile-dashboard.html">
+                    <i data-lucide="building-2"></i> Commercial Profile
+                </a>
+                <a class="nav-item" data-url="app/contracts/contracts-dashboard.html">
+                    <i data-lucide="file-signature"></i> Contracts
+                </a>
+                <a class="nav-item" data-url="app/legal-documents/legal-documents-dashboard.html">
+                    <i data-lucide="file-text"></i> Legal Documents
+                </a>
+
+                <div class="nav-section-title">Intelligence & Resources</div>
+                <a class="nav-item" data-url="app/ai-legal-advisor/chat.html">
+                    <i data-lucide="bot"></i> AI Legal Advisor
+                </a>
+                <a class="nav-item" data-url="app/knowledge/tutorials.html">
+                    <i data-lucide="graduation-cap"></i> Knowledge Base
+                </a>
+                <a class="nav-item" data-url="app/notifications/alerts.html">
+                    <i data-lucide="bell"></i> Notifications
+                </a>
+                <a class="nav-item" data-url="app/resources/library.html">
+                    <i data-lucide="library"></i> Library
+                </a>
+
+                <div class="nav-section-title">External</div>
+                <!-- Example of adding a custom URL -->
+                <a class="nav-item" data-url="https://en.wikipedia.org/wiki/Law" target="_blank">
+                    <i data-lucide="external-link"></i> Custom External Link
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="version-tag">
+                    <i data-lucide="git-branch"></i> v2.0.26-BETA
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Content Area -->
+        <main id="main-area" style="position: relative;">
+            <header>
+                <div class="header-left">
+                    <button class="mobile-toggle" id="mobile-menu-btn"><i data-lucide="menu"></i></button>
+                    <div style="font-family: var(--font-tech); font-weight: 500;">DASHBOARD_ENV</div>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-text">SETUP: <span id="progress-text">0%</span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- IFRAME REPLACES DYNAMIC CONTENT -->
+            <iframe id="content-frame" name="content-frame" title="Main Content Area"></iframe>
+            
+            <!-- Module Loader Overlay -->
+            <div id="module-loader" class="module-loader">
+                <div class="spinner"></div>
+                <div class="loader-text">CONNECTING TO MODULE...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal System (Accessible by iframes via window.parent) -->
+    <div id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title" style="font-family: var(--font-tech);">System Action</h3>
+                <button class="modal-close" id="close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --- PROGRESS SYSTEM (Exposed to iframes via window.parent) ---
+        const globalCompletedTasks = new Set();
+        const TOTAL_TASKS_IN_APP = 19;
+
+        // Child iframes will call this function: window.parent.updateSystemProgress('task_id', true/false)
+        window.updateSystemProgress = function(taskId, isCompleted) {
+            if (isCompleted) {
+                globalCompletedTasks.add(taskId);
+            } else {
+                globalCompletedTasks.delete(taskId);
+            }
+            
+            let percent = Math.round((globalCompletedTasks.size / TOTAL_TASKS_IN_APP) * 100);
+            percent = Math.min(percent, 100); // Cap at 100%
+            
+            document.getElementById('progress-fill').style.width = `${percent}%`;
+            document.getElementById('progress-text').innerText = `${percent}%`;
+
+            if (percent >= 100) triggerSuccess();
+        };
+
+        // --- MODAL SYSTEM (Exposed to iframes) ---
+        window.openSystemModal = function(title, content) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerHTML = content;
+            document.getElementById('modal-overlay').classList.add('active');
+        };
+
+        document.getElementById('close-modal').addEventListener('click', () => {
+            document.getElementById('modal-overlay').classList.remove('active');
+        });
+
+        function triggerSuccess() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+            window.openSystemModal('System Complete', '<h2 style="color:var(--success); text-align:center;">100% COMPLIANCE REACHED</h2>');
+        }
+
+        // --- IFRAME ROUTING SYSTEM ---
+        const iframe = document.getElementById('content-frame');
+
+        // Automatically inject styles and icons into local child pages
+        iframe.addEventListener('load', function() {
+            // Hide the loading overlay when any content (or error banner) finishes loading
+            document.getElementById('module-loader').classList.remove('active');
+            
+            try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                if (iframeDoc && iframe.src !== 'about:blank' && !iframe.src.startsWith('http')) {
+                    // Inject Parent Styles
+                    if (!iframeDoc.getElementById('injected-dashboard-styles')) {
+                        const style = iframeDoc.createElement('style');
+                        style.id = 'injected-dashboard-styles';
+                        let parentCSS = '';
+                        document.querySelectorAll('style').forEach(s => parentCSS += s.innerHTML);
+                        // Add base body padding/margin resets for the iframe content, and FORCE scrollability
+                        parentCSS += 'body { padding: 32px; margin: 0; background: transparent; overflow-x: hidden; overflow-y: auto !important; }';
+                        style.innerHTML = parentCSS;
+                        iframeDoc.head.appendChild(style);
+                    }
+                    
+                    // Inject and Initialize Icons
+                    if (!iframeDoc.querySelector('script[src*="lucide"]')) {
+                        const script = iframeDoc.createElement('script');
+                        script.src = "https://unpkg.com/lucide@latest";
+                        script.onload = () => { if(iframe.contentWindow.lucide) iframe.contentWindow.lucide.createIcons(); };
+                        iframeDoc.head.appendChild(script);
+                    } else if (iframe.contentWindow.lucide) {
+                        iframe.contentWindow.lucide.createIcons();
+                    }
+                }
+            } catch(e) {
+                console.warn("Cross-origin iframe load. Dynamic styles not injected.", e);
+            }
+        });
+        
+        function loadPage(url, navElement) {
+            // Trigger Loading Animation Overlay
+            document.getElementById('module-loader').classList.add('active');
+
+            // Update Active State
+            if (navElement) {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                navElement.classList.add('active');
+            }
+
+            // Close mobile menu
+            document.getElementById('sidebar').classList.remove('open');
+
+            // Handle External links vs Internal Views
+            if (url.startsWith('http')) {
+                iframe.removeAttribute('srcdoc');
+                iframe.src = url;
+                return;
+            }
+
+            // === VIRTUAL FILE SYSTEM (For Preview Environment Only) ===
+            // Contains ONLY the 2 requested static sections
+            if (VFS[url]) {
+                // We pull styles directly from the parent to simulate what the onload event does for actual files
+                let parentCSS = '';
+                document.querySelectorAll('style').forEach(s => parentCSS += s.innerHTML);
+                
+                const htmlTemplate = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+                        <script src="https://unpkg.com/lucide@latest"><\/script>
+                        <style>
+                            ${parentCSS}
+                            /* Force scrollability inside the iframe */
+                            body { padding: 32px; margin: 0; background: transparent; overflow-x: hidden; overflow-y: auto !important; }
+                        </style>
+                    </head>
+                    <body>
+                        <div id="dynamic-content">
+                            ${VFS[url]}
+                        </div>
+                        <script>
+                            lucide.createIcons();
+                            function updateProgress(checkbox, taskId) {
+                                window.parent.updateSystemProgress(taskId, checkbox.checked);
+                                if(checkbox.checked) checkbox.parentElement.classList.add('completed');
+                                else checkbox.parentElement.classList.remove('completed');
+                            }
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+                iframe.srcdoc = htmlTemplate;
+            } else {
+                // Default local file load (For all dynamically added pages)
+                // Check if the file exists using fetch, display error banner if missing
+                fetch(url, { method: 'HEAD' })
+                    .then(response => {
+                        if (response.ok) {
+                            iframe.removeAttribute('srcdoc'); // Must clear srcdoc before setting src
+                            iframe.src = url;
+                        } else {
+                            renderErrorBanner(url);
+                        }
+                    })
+                    .catch(e => {
+                        // Enforce Error Banner even if fetch entirely fails (e.g. CORS on missing local file)
+                        renderErrorBanner(url);
+                    });
+            }
+        }
+        
+        function renderErrorBanner(url) {
+            let parentCSS = '';
+            document.querySelectorAll('style').forEach(s => parentCSS += s.innerHTML);
+            const errorHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+                    <script src="https://unpkg.com/lucide@latest"><\/script>
+                    <style>
+                        ${parentCSS}
+                        body { padding: 32px; margin: 0; background: transparent; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+                        .error-container { text-align: center; max-width: 500px; padding: 40px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="error-container">
+                        <i data-lucide="alert-triangle" style="width: 64px; height: 64px; color: var(--warning); margin-bottom: 24px; display: inline-block;"></i>
+                        <h2 style="font-family: var(--font-tech); margin-bottom: 16px; color: var(--text-main);">Module Not Found</h2>
+                        <p style="color: var(--text-muted); margin-bottom: 24px; line-height: 1.6;">The requested application file was not found:<br><code style="color: var(--primary);">${url}</code><br><br>Please ensure this file exists in your project directory.</p>
+                        <button class="btn btn-outline" onclick="window.parent.document.querySelector('[data-url=\\'app/overview/overview.html\\']').click()">Return to Overview</button>
+                    </div>
+                    <script>lucide.createIcons();<\/script>
+                </body>
+                </html>
+            `;
+            iframe.srcdoc = errorHtml;
+        }
+
+        // Attach listeners
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const url = e.currentTarget.getAttribute('data-url');
+                loadPage(url, e.currentTarget);
+            });
+        });
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        document.getElementById('mobile-close-btn').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('open');
+        });
+
+        // =========================================================================
+        // MOCK DATA FOR DEMONSTRATION PURPOSES ONLY.
+        // This injects the inner-HTML into the iframe using srcdoc so the preview 
+        // works perfectly without needing actual local files in this environment.
+        // =========================================================================
+
+        const VFS = {
+            'app/overview/overview.html': `
+                <section>
+                    <div class="page-header fade-in">
+                        <h1 class="page-title">Welcome to LegalHUB</h1>
+                        <p class="page-intro">Your central control center for business legal infrastructure. Manage contracts, compliance, identity, and AI assistance from a single, secure interface.</p>
+                    </div>
+                    
+                    <div class="grid-layout">
+                        <div class="card" style="grid-column: 1 / -1;">
+                            <h3 class="mb-4">System Overview</h3>
+                            <div class="video-placeholder" onclick="window.parent.openSystemModal('System Tutorial', '<p>Video player simulation: Intro to LegalHUB operations.</p>')">
+                                <i data-lucide="play-circle" style="width:48px; height:48px; color:rgba(255,255,255,0.5);"></i>
+                                <span style="position:absolute; bottom:16px; left:16px; font-family:var(--font-code); font-size:12px; color: rgba(255,255,255,0.5);">INTRO_TO_LEGALHUB.MP4</span>
+                            </div>
+                            <p class="text-sm">Learn how to establish your business legal architecture, generate automated contracts, and ensure ongoing compliance.</p>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="mb-4"><i data-lucide="check-square" style="vertical-align: middle; margin-right: 8px;"></i> Initial Setup Checklist</h3>
+                            <div class="checklist">
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_1')"><span>Understand platform purpose</span></label>
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_2')"><span>Review navigation menu architecture</span></label>
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_3')"><span>Understand each module function</span></label>
+                            </div>
+                        </div>
+
+                        <div class="card" id="warning-card">
+                            <h3 class="mb-4" id="warning-title"><i data-lucide="shield-alert" style="vertical-align: middle; margin-right: 8px; color: var(--warning);"></i> Active Warnings</h3>
+                            <div id="warning-box" style="background: rgba(255,212,59,0.1); border-left: 3px solid var(--warning); padding: 12px; border-radius: 4px; margin-bottom: 12px;">
+                                <strong id="warning-strong" style="color: var(--warning); display: block; margin-bottom: 4px;">Profile Incomplete</strong>
+                                <span id="warning-span" class="text-sm">Your Commercial Profile is missing key registration documents.</span>
+                            </div>
+                            <button id="warning-btn" class="btn btn-outline" style="width: 100%; justify-content: center;" onclick="window.parent.document.querySelector('[data-url=\\'app/commercial-profile/profile-dashboard.html\\']').click()">Resolve Now</button>
+                        </div>
+                    </div>
+
+                    <script>
+                        // Dynamically check if profile was completed to update the Overview status
+                        if (sessionStorage.getItem('profile_completed_confetti') === 'true') {
+                            document.getElementById('warning-title').innerHTML = '<i data-lucide="shield-check" style="vertical-align: middle; margin-right: 8px; color: var(--success);"></i> System Status';
+                            
+                            const box = document.getElementById('warning-box');
+                            box.style.background = 'rgba(81, 207, 102, 0.1)';
+                            box.style.borderLeft = '3px solid var(--success)';
+                            
+                            const str = document.getElementById('warning-strong');
+                            str.style.color = 'var(--success)';
+                            str.innerText = 'Profile Verified';
+                            
+                            document.getElementById('warning-span').innerText = 'Your Commercial Profile is complete and securely stored in the Vault.';
+                            
+                            const btn = document.getElementById('warning-btn');
+                            if(btn) btn.style.display = 'none';
+                        }
+                    <\/script>
+                </section>`,
+            'app/commercial-profile/profile-dashboard.html': `
+                <section>
+                    <div class="page-header">
+                        <h1 class="page-title">Commercial Profile</h1>
+                        <p class="page-intro">Create and manage the definitive legal identity of your business. Store compliance records, structure details, and registration files.</p>
+                    </div>
+                    <div class="grid-layout">
+                        <div class="card" style="grid-column: span 2;">
+                            <div class="flex-between mb-4">
+                                <h3>Business Identity</h3><span class="badge warning" id="profile-status">Pending Verification</span>
+                            </div>
+                            <form id="profile-form" onsubmit="handleProfileSubmit(event)">
+                                <div class="grid-layout" style="grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 0;">
+                                    
+                                    <!-- Region Selector -->
+                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                        <label>Operating Region</label>
+                                        <select id="region-select" class="form-control" style="border-color: var(--primary);" onchange="updateRegionFields()">
+                                            <option value="USA" selected>United States</option>
+                                            <option value="EU">European Union</option>
+                                            <option value="DR">Dominican Republic</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Company Legal Name</label>
+                                        <input type="text" class="form-control" required placeholder="e.g. Acme Tech SRL">
+                                    </div>
+                                    <div class="form-group">
+                                        <label id="tax-id-label">Employer Identification Number (EIN)</label>
+                                        <input type="text" id="tax-id-input" class="form-control" required placeholder="e.g. 12-3456789">
+                                    </div>
+                                    <div class="form-group">
+                                        <label id="reg-label">State of Incorporation</label>
+                                        <input type="text" id="reg-input" class="form-control" required placeholder="e.g. Delaware, LLC">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Commercial Address</label>
+                                        <input type="text" class="form-control" required placeholder="Full Legal Street Address">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Commercial Phone Number</label>
+                                        <input type="tel" class="form-control" required placeholder="+1 (809) 000-0000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Commercial Email</label>
+                                        <input type="email" class="form-control" required placeholder="legal@company.com">
+                                    </div>
+                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                        <label>Legal Representative</label>
+                                        <input type="text" class="form-control" required placeholder="Full Name of Signatory">
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap;">
+                                    <button type="submit" class="btn"><i data-lucide="save"></i> Save Identity Data</button>
+                                    <button type="button" class="btn" onclick="window.parent.openSystemModal('Checklist', 'Downloading your compliance checklist PDF...')"><i data-lucide="download"></i> Download Checklist</button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="card">
+                            <h3 class="mb-4">Required Documents</h3>
+                            <p class="text-sm mb-4">Upload and verify your core business registration files.</p>
+                            <div class="checklist" id="dynamic-checklist">
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_prof_1')"><span>Add entity legal name</span></label>
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_prof_2')"><span>Add EIN</span></label>
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_prof_3')"><span>Upload Articles of Incorporation</span></label>
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_prof_4')"><span>Add registered agent address</span></label>
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_prof_5')"><span>Add authorized signatory</span></label>
+                            </div>
+                        </div>
+
+                        <!-- New Digital Services Card -->
+                        <div class="card">
+                            <h3 class="mb-4">Digital Services</h3>
+                            <p class="text-sm mb-4">Establish your business presence with our trusted partner services.</p>
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <button id="btn-domain" class="btn btn-outline" style="justify-content: flex-start; border-color: rgba(255,255,255,0.1); color: var(--text-main);" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='var(--text-main)'" onclick="window.parent.open('https://example.com/domain-usa', '_blank')">
+                                    <i data-lucide="globe" style="width: 18px; height: 18px; margin-right: 8px;"></i> Get a Domain Name
+                                </button>
+                                <button id="btn-email" class="btn btn-outline" style="justify-content: flex-start; border-color: rgba(255,255,255,0.1); color: var(--text-main);" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='var(--text-main)'" onclick="window.parent.open('https://example.com/email-usa', '_blank')">
+                                    <i data-lucide="mail" style="width: 18px; height: 18px; margin-right: 8px;"></i> Professional Email
+                                </button>
+                                <button id="btn-voip" class="btn btn-outline" style="justify-content: flex-start; border-color: rgba(255,255,255,0.1); color: var(--text-main);" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='var(--text-main)'" onclick="window.parent.open('https://example.com/voip-usa', '_blank')">
+                                    <i data-lucide="phone-call" style="width: 18px; height: 18px; margin-right: 8px;"></i> Business VoIP Number
+                                </button>
+                                <button id="btn-postal" class="btn btn-outline" style="justify-content: flex-start; border-color: rgba(255,255,255,0.1); color: var(--text-main);" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='var(--text-main)'" onclick="window.parent.open('https://ipostal1.com/?ref=7505', '_blank')">
+                                    <i data-lucide="map-pin" style="width: 18px; height: 18px; margin-right: 8px;"></i> Virtual Address / Postal
+                                </button>
+                                <button id="btn-register" class="btn btn-outline" style="justify-content: flex-start; border-color: rgba(255,255,255,0.1); color: var(--text-main);" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='var(--text-main)'" onclick="window.parent.open('https://example.com/register-usa', '_blank')">
+                                    <i data-lucide="briefcase" style="width: 18px; height: 18px; margin-right: 8px;"></i> Register Your Business Name
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Full Width Clickable Banner -->
+                    <div style="margin-top: 8px; margin-bottom: 24px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 80, 17, 0.2); cursor: pointer; transition: all 0.3s ease;" 
+                         onclick="window.parent.open('https://legalhub.com/special-offer', '_blank')"
+                         onmouseover="this.style.boxShadow='0 0 30px rgba(255, 80, 17, 0.3)'; this.style.borderColor='var(--primary)';"
+                         onmouseout="this.style.boxShadow='none'; this.style.borderColor='rgba(255, 80, 17, 0.2)';">
+                        <img src="https://bucket.mlcdn.com/a/3336/3336910/images/63cbab869ab6b2aa44cdb6d95f760c7cd1dddef3.png" alt="Special Offer Banner" style="width: 100%; height: auto; display: block;">
+                    </div>
+
+                    <script>
+                        function updateRegionFields() {
+                            const region = document.getElementById('region-select').value;
+                            const taxLabel = document.getElementById('tax-id-label');
+                            const taxInput = document.getElementById('tax-id-input');
+                            const regLabel = document.getElementById('reg-label');
+                            const regInput = document.getElementById('reg-input');
+                            const checklistObj = document.getElementById('dynamic-checklist');
+                            
+                            // Digital Services Buttons
+                            const btnDomain = document.getElementById('btn-domain');
+                            const btnEmail = document.getElementById('btn-email');
+                            const btnVoip = document.getElementById('btn-voip');
+                            const btnPostal = document.getElementById('btn-postal');
+                            const btnRegister = document.getElementById('btn-register');
+
+                            if (region === 'DR') {
+                                taxLabel.innerText = 'Registration Number (RNC)';
+                                taxInput.placeholder = 'e.g. 1-30-12345-6';
+                                regLabel.innerText = 'Mercantile Registry Number';
+                                regInput.placeholder = 'e.g. 12345SDQ';
+                                checklistObj.innerHTML = '<label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_1\\')"><span>Add company legal name</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_2\\')"><span>Add RNC number</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_3\\')"><span>Upload Mercantile Registry</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_4\\')"><span>Add registered address</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_5\\')"><span>Add legal representative</span></label>';
+                                
+                                // Update Digital Service Links for DR
+                                btnDomain.setAttribute('onclick', "window.parent.open('https://example.com/domain-dr', '_blank')");
+                                btnEmail.setAttribute('onclick', "window.parent.open('https://example.com/email-dr', '_blank')");
+                                btnVoip.setAttribute('onclick', "window.parent.open('https://example.com/voip-dr', '_blank')");
+                                btnPostal.setAttribute('onclick', "window.parent.open('https://ipostal1.com/?ref=7505', '_blank')");
+                                btnRegister.setAttribute('onclick', "window.parent.open('https://onapi.gob.do', '_blank')");
+                                
+                            } else if (region === 'USA') {
+                                taxLabel.innerText = 'Employer Identification Number (EIN)';
+                                taxInput.placeholder = 'e.g. 12-3456789';
+                                regLabel.innerText = 'State of Incorporation';
+                                regInput.placeholder = 'e.g. Delaware, LLC';
+                                checklistObj.innerHTML = '<label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_1\\')"><span>Add entity legal name</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_2\\')"><span>Add EIN</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_3\\')"><span>Upload Articles of Incorporation</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_4\\')"><span>Add registered agent address</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_5\\')"><span>Add authorized signatory</span></label>';
+                                
+                                // Update Digital Service Links for USA
+                                btnDomain.setAttribute('onclick', "window.parent.open('https://example.com/domain-usa', '_blank')");
+                                btnEmail.setAttribute('onclick', "window.parent.open('https://example.com/email-usa', '_blank')");
+                                btnVoip.setAttribute('onclick', "window.parent.open('https://example.com/voip-usa', '_blank')");
+                                btnPostal.setAttribute('onclick', "window.parent.open('https://ipostal1.com/?ref=7505', '_blank')");
+                                btnRegister.setAttribute('onclick', "window.parent.open('https://example.com/register-usa', '_blank')");
+                                
+                            } else if (region === 'EU') {
+                                taxLabel.innerText = 'VAT Number / Tax ID';
+                                taxInput.placeholder = 'e.g. DE123456789';
+                                regLabel.innerText = 'Member State of Registration';
+                                regInput.placeholder = 'e.g. Germany, GmbH';
+                                checklistObj.innerHTML = '<label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_1\\')"><span>Add corporate name</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_2\\')"><span>Add VAT/EORI number</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_3\\')"><span>Upload Trade Register Extract</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_4\\')"><span>Add registered office address</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_5\\')"><span>Add managing director</span></label>';
+                                
+                                // Update Digital Service Links for EU
+                                btnDomain.setAttribute('onclick', "window.parent.open('https://example.com/domain-eu', '_blank')");
+                                btnEmail.setAttribute('onclick', "window.parent.open('https://example.com/email-eu', '_blank')");
+                                btnVoip.setAttribute('onclick', "window.parent.open('https://example.com/voip-eu', '_blank')");
+                                btnPostal.setAttribute('onclick', "window.parent.open('https://ipostal1.com/?ref=7505', '_blank')");
+                                btnRegister.setAttribute('onclick', "window.parent.open('https://example.com/register-eu', '_blank')");
+                            }
+                        }
+
+                        function handleProfileSubmit(e) {
+                            e.preventDefault();
+                            const regionSelect = document.getElementById('region-select');
+                            const regionText = regionSelect.options[regionSelect.selectedIndex].text;
+                            const hasSubmitted = sessionStorage.getItem('profile_completed_confetti');
+                            
+                            if (!hasSubmitted) {
+                                // First time submission - show confetti and congrats
+                                if (window.parent.confetti) {
+                                    var duration = 3 * 1000;
+                                    var animationEnd = Date.now() + duration;
+                                    var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+                                    function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+                                    var interval = setInterval(function() {
+                                        var timeLeft = animationEnd - Date.now();
+                                        if (timeLeft <= 0) return clearInterval(interval);
+                                        var particleCount = 50 * (timeLeft / duration);
+                                        window.parent.confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                                        window.parent.confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                                    }, 250);
+                                }
+                                
+                                window.parent.openSystemModal('Congratulations! 🎉', '<h3 style="color:var(--success); text-align:center; margin-bottom: 12px;">Profile Completed</h3><p style="text-align:center;">Your business identity for <strong>' + regionText + '</strong> has been securely stored in the Vault. You are now ready to generate compliant contracts.</p>');
+                                
+                                sessionStorage.setItem('profile_completed_confetti', 'true');
+                                
+                                // Update status badge visually
+                                const statusBadge = document.getElementById('profile-status');
+                                statusBadge.className = 'badge success';
+                                statusBadge.innerText = 'Verified';
+                                
+                                // Automatically check off the profile tasks dynamically
+                                document.querySelectorAll('#dynamic-checklist .check-item input').forEach(chk => {
+                                    if(!chk.checked) chk.click(); 
+                                });
+                            } else {
+                                // Subsequent saves
+                                window.parent.openSystemModal('Vault Updated', '<p style="text-align:center;">Profile Data for <strong>' + regionText + '</strong> has been securely updated.</p>');
+                            }
+                        }
+                    <\/script>
+                </section>`
+        };
+
+        // Load default view
+        window.addEventListener('DOMContentLoaded', () => {
+            loadPage('app/overview/overview.html', document.querySelector('[data-url="app/overview/overview.html"]'));
+        });
+    </script>
+</body>
+</html>
