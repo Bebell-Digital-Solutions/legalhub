@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LegalHUB | Master Control Center</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+   <!-- Favicon -->
+    <link rel="icon" href="https://bucket.mlcdn.com/a/3336/3336910/images/1f438c0b0021073ba572ed09adc332612bb021c5.png">
+
+    <style>
+        :root {
+            --primary: #ff5011;
+            --secondary: hsl(210, 10%, 23%);
+            --bg-dark: #0d0d0d;
+            --bg-darker: #050505;
+            --bg-card: hsl(242, 14%, 12%);
+            --bg-hover: hsl(242, 14%, 16%);
+            
+            --text-main: hsl(242, 8%, 98%);
+            --text-muted: hsl(242, 8%, 70%);
+            --border: rgba(255, 80, 17, 0.2);
+            
+            --success: #51cf66;
+            --warning: #ffd43b;
+            --danger: #ef4444;
+            
+            --gradient-1: linear-gradient(135deg, var(--primary) 0%, #ff7a33 100%);
+            --gradient-card: linear-gradient(135deg, rgba(255, 80, 17, 0.05) 0%, rgba(255, 122, 51, 0.02) 100%);
+            
+            --shadow-glow: 0 0 30px rgba(255, 80, 17, 0.25);
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            --font-primary: 'Inter', sans-serif;
+            --font-code: 'Fira Code', monospace;
+            --font-tech: 'Orbitron', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-primary);
+            overflow: hidden; 
+        }
+
+        /* --- Background Effects --- */
+        #bg-effects {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 0;
+            background-image: linear-gradient(rgba(255, 80, 17, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 80, 17, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        
+        .glow-orb {
+            position: absolute; width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(255,80,17,0.08) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%; top: -100px; right: -100px;
+        }
+
+        /* --- Main Layout --- */
+        .app-container {
+            display: flex; height: 100vh; position: relative; z-index: 1;
+        }
+
+        /* --- Sidebar --- */
+        #sidebar {
+            width: 280px; background-color: var(--bg-darker); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; transition: transform var(--transition);
+        }
+
+        .nav-menu::-webkit-scrollbar { width: 6px; }
+        .nav-menu::-webkit-scrollbar-thumb { background: rgba(255,80,17,0.3); border-radius: 10px; }
+
+        .sidebar-brand {
+            text-align: center; margin-bottom: 10px; padding-bottom: 24px; padding-top: 30px;
+            border-bottom: 1px solid var(--border); white-space: nowrap;
+        }
+
+        .brand-logo {
+            width: 110px; height: 110px; display: block; margin: 0 auto 15px auto;
+            filter: drop-shadow(0 0 5px rgba(255, 80, 17, 0.3)); cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); object-fit: contain;
+        }
+        .brand-logo:hover { filter: drop-shadow(0 0 15px var(--primary)) brightness(1.2) blur(0.2px); transform: scale(1.1) translateY(-5px); }
+
+        .brand-text { font-family: var(--font-tech); font-size: 1.2rem; font-weight: 500; letter-spacing: 1px; display: block; }
+
+        .nav-menu { flex: 1; padding: 20px 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            color: var(--text-muted); text-decoration: none; border-radius: 8px;
+            transition: var(--transition); cursor: pointer; font-weight: 500;
+        }
+        .nav-item:hover { background-color: var(--bg-hover); color: var(--text-main); }
+        .nav-item.active {
+            background: var(--gradient-card); border: 1px solid var(--border);
+            color: var(--primary); box-shadow: inset 0 0 20px rgba(255,80,17,0.05);
+        }
+
+        .nav-section-title {
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--text-muted); margin: 16px 0 8px 16px; font-weight: 700; opacity: 0.5;
+        }
+
+        /* Sidebar Footer */
+        .sidebar-footer {
+            padding: 24px;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            margin-top: auto;
+        }
+
+        .version-tag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: var(--font-tech);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            transition: var(--transition);
+            cursor: pointer;
+            letter-spacing: 1px;
+        }
+
+        .version-tag:hover {
+            color: var(--primary);
+        }
+
+        /* --- Main Content Area --- */
+        #main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+        header {
+            height: 80px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(13, 13, 13, 0.8); backdrop-filter: blur(10px);
+        }
+
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .mobile-toggle { display: none; background: none; border: none; color: var(--text-main); cursor: pointer; }
+
+        .progress-container { display: flex; align-items: center; gap: 16px; width: 300px; }
+        .progress-bar { flex: 1; height: 8px; background: var(--bg-card); border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .progress-fill { height: 100%; background: var(--gradient-1); width: 0%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--primary); }
+        .progress-text { font-family: var(--font-code); font-size: 0.85rem; color: var(--primary); }
+
+        /* iframe container */
+        #content-frame {
+            width: 100%; height: 100%; border: none; flex: 1; background: transparent;
+        }
+
+        /* Modals */
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: flex;
+            align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: var(--transition);
+        }
+        #modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-content {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+            width: 90%; max-width: 600px; padding: 32px; transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 90vh; display: flex; flex-direction: column;
+        }
+        #modal-overlay.active .modal-content { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-shrink: 0; }
+        #modal-body { overflow-y: auto; flex: 1; padding-right: 8px; }
+        #modal-body::-webkit-scrollbar { width: 6px; }
+        #modal-body::-webkit-scrollbar-thumb { background: rgba(255,80,17,0.3); border-radius: 10px; }
+        
+        .modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; }
+        .modal-close:hover { color: var(--text-main); }
+
+        /* Mobile Sidebar Close Button */
+        .mobile-close-btn {
+            display: none;
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            z-index: 10;
+            padding: 6px;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+        
+        .mobile-close-btn:hover {
+            color: var(--primary);
+            background: rgba(255, 80, 17, 0.1);
+        }
+
+        /* Adjusted max-width to 1024px to cover iPads and medium tablets */
+        @media (max-width: 1024px) {
+            #sidebar { position: fixed; height: 100vh; transform: translateX(-100%); z-index: 100; }
+            #sidebar.open { transform: translateX(0); box-shadow: 20px 0 50px rgba(0,0,0,0.5); }
+            .mobile-toggle { display: block; }
+            .mobile-close-btn { display: block; }
+            .progress-container { width: 150px; }
+        }
+
+        /* Module Transition Loader */
+        .module-loader {
+            position: absolute;
+            top: 80px; /* Height of the header */
+            left: 0; right: 0; bottom: 0;
+            background: rgba(13, 13, 13, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .module-loader.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 3px solid rgba(255, 80, 17, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader-text {
+            font-family: var(--font-code);
+            color: var(--primary);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* --- Shared Component Styles (Automatically injected into iframes) --- */
+        .page-header { margin-bottom: 32px; }
+        .page-title { font-family: var(--font-tech); font-size: 2rem; margin-bottom: 8px; color: var(--text-main); }
+        .page-intro { color: var(--text-muted); max-width: 800px; line-height: 1.6; }
+        
+        /* Default Auto-Fit Grid (Used for Profile/Forms) */
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 32px; }
+        
+        /* 4-Column Grid System (Used for Overview Dashboard) */
+        .grid-4 { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 24px; 
+            margin-bottom: 32px; 
+        }
+        @media (max-width: 1200px) {
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .grid-4 { grid-template-columns: 1fr; }
+        }
+
+        @keyframes fadeInSection {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--gradient-card);
+            border: 1px solid var(--border);
+            border-radius: 16px; 
+            padding: 2.5rem;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6), inset 0 0 20px rgba(255, 80, 17, 0.05);
+            backdrop-filter: blur(10px); 
+            margin-bottom: 2rem;
+            animation: fadeInSection 0.4s ease-out;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .card:hover { transform: translateY(-2px); }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .card:hover::before { opacity: 1; }
+        
+        .checklist { display: flex; flex-direction: column; gap: 12px; }
+        .check-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid transparent; cursor: pointer; transition: var(--transition); }
+        .check-item:hover { background: rgba(255,255,255,0.05); border-color: rgba(255, 80, 17, 0.1); }
+        .check-item input[type="checkbox"] { appearance: none; width: 20px; height: 20px; border: 2px solid var(--text-muted); border-radius: 4px; background: transparent; cursor: pointer; position: relative; transition: var(--transition); }
+        .check-item input[type="checkbox"]:checked { background: var(--primary); border-color: var(--primary); }
+        .check-item input[type="checkbox"]:checked::after { content: '✓'; position: absolute; color: white; font-size: 14px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .check-item.completed { opacity: 0.6; text-decoration: line-through; }
+        
+        .btn { background: var(--gradient-1); color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: var(--transition); font-family: var(--font-primary); }
+        .btn:hover { box-shadow: 0 0 30px rgba(255, 80, 17, 0.25); transform: translateY(-1px); }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); width: 100%; justify-content: center; }
+        
+        .mb-4 { margin-bottom: 16px; } 
+        .text-sm { font-size: 0.85rem; color: var(--text-muted); }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Form Inputs Refined */
+        .form-group { margin-bottom: 16px; } 
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; } 
+        .form-control { 
+            width: 100%; 
+            background: rgba(0,0,0,0.5); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            padding: 12px 16px; 
+            border-radius: 6px; 
+            color: white; 
+            font-family: var(--font-primary);
+            font-size: 0.95rem;
+            transition: var(--transition);
+            box-sizing: border-box;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(255, 80, 17, 0.2);
+            background: rgba(0,0,0,0.7);
+        }
+        .form-control::placeholder { color: rgba(255,255,255,0.3); }
+
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; } 
+        .badge.warning { background: rgba(255, 212, 59, 0.1); color: var(--warning); border: 1px solid var(--warning); }
+        .badge.success { background: rgba(81, 207, 102, 0.1); color: var(--success); border: 1px solid var(--success); }
+
+        /* --- Shared Calendar Component Styles --- */
+        .calendar-container { width: 100%; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
+        .calendar-day-header { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; padding-bottom: 8px; text-transform: uppercase; }
+        .calendar-day {
+            aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 0.85rem;
+            cursor: pointer; transition: var(--transition); border: 1px solid transparent;
+            position: relative; font-family: var(--font-code);
+        }
+        .calendar-day:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,80,17,0.3); transform: translateY(-1px); }
+        .calendar-day.active { background: rgba(255,80,17,0.15); color: var(--primary); border-color: var(--primary); font-weight: 700; box-shadow: inset 0 0 10px rgba(255,80,17,0.1); }
+        .calendar-day.muted { opacity: 0.3; pointer-events: none; }
+        .calendar-day.has-event::after {
+            content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+            width: 4px; height: 4px; background: var(--warning); border-radius: 50%;
+            box-shadow: 0 0 4px var(--warning);
+        }
+
+        /* --- Video YouTube Container --- */
+        .video-container { 
+            width: 100%; 
+            aspect-ratio: 16 / 9; 
+            background: #000; 
+            border-radius: 8px; 
+            position: relative; 
+            overflow: hidden; 
+            border: 1px solid var(--border); 
+            margin-bottom: 16px; 
+            cursor: pointer; 
+            transition: var(--transition); 
+        }
+        .video-container:hover { border-color: var(--primary); box-shadow: 0 0 20px rgba(255,80,17,0.15); }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; z-index: 1; }
+        
+        /* Custom Thumbnail Overlay */
+        .thumbnail-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('https://bucket.mlcdn.com/a/3336/3336910/images/c5db39ead0f1819ae22ec29110acef11544a13bc.png');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            transition: opacity 0.3s ease;
+        }
+        .thumbnail-overlay::before { 
+            content: ''; 
+            position: absolute; 
+            inset: 0; 
+            background: rgba(0,0,0,0.4); 
+            transition: var(--transition); 
+        }
+        .video-container:hover .thumbnail-overlay::before { background: rgba(0,0,0,0.2); }
+        
+        .video-play-btn { 
+            position: relative; 
+            z-index: 3; 
+            width: 72px; 
+            height: 72px; 
+            background-color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 4px 15px rgba(255, 80, 17, 0.4)); 
+            transition: var(--transition); 
+        }
+        .video-container:hover .video-play-btn { 
+            transform: scale(1.15); 
+            filter: drop-shadow(0 6px 20px rgba(255, 80, 17, 0.6)); 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bg-effects"><div class="glow-orb"></div></div>
+
+    <div class="app-container" id="app">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar">
+            <button id="mobile-close-btn" class="mobile-close-btn"><i data-lucide="x"></i></button>
+            <div class="sidebar-brand">
+                <img src="https://bucket.mlcdn.com/a/3336/3336910/images/11fb0520d3e31fe271f4cb6827acba272b7610d3.png" alt="LegalHUB Logo" class="brand-logo">
+                <span class="brand-text">LegalHUB</span>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-section-title">Core Modules</div>
+                <!-- Links now use data-url pointing to the specific files -->
+                <a class="nav-item active" data-url="app/overview/overview.html">
+                    <i data-lucide="layout-dashboard"></i> Overview
+                </a>
+                <a class="nav-item" data-url="app/commercial-profile/profile-dashboard.html">
+                    <i data-lucide="building-2"></i> Commercial Profile
+                </a>
+                <a class="nav-item" data-url="app/contracts/contracts-dashboard.html">
+                    <i data-lucide="file-signature"></i> Contracts
+                </a>
+                <a class="nav-item" data-url="https://legalhub.projectfreedom.club/app/legal-documents">
+                    <i data-lucide="file-text"></i> Legal Documents
+                </a>
+                <!-- NEW COMPLIANCE TRACKING LINK -->
+                <a class="nav-item" data-url="app/compliance/tracking.html">
+                    <i data-lucide="calendar-check"></i> Compliance Tracking
+                </a>
+
+                <div class="nav-section-title">Intelligence & Resources</div>
+                <a class="nav-item" data-url="app/ai-legal-advisor/chat.html">
+                    <i data-lucide="bot"></i> AI Legal Advisor
+                </a>
+                <a class="nav-item" data-url="app/knowledge/tutorials.html">
+                    <i data-lucide="graduation-cap"></i> Knowledge Base
+                </a>
+                <a class="nav-item" data-url="app/notifications/alerts.html">
+                    <i data-lucide="bell"></i> Notifications
+                </a>
+                <a class="nav-item" data-url="app/resources/library.html">
+                    <i data-lucide="library"></i> Library
+                </a>
+
+                <div class="nav-section-title">External</div>
+                <!-- Example of adding a custom URL -->
+                <a class="nav-item" data-url="https://en.wikipedia.org/wiki/Law" target="_blank">
+                    <i data-lucide="external-link"></i> Custom External Link
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="version-tag">
+                    <i data-lucide="git-branch"></i> v2.0.26-BETA
+                </div>
+            </div>
+        </aside>
+
+        <!-- Right Content Area -->
+        <main id="main-area" style="position: relative;">
+            <header>
+                <div class="header-left">
+                    <button class="mobile-toggle" id="mobile-menu-btn"><i data-lucide="menu"></i></button>
+                    <div style="font-family: var(--font-tech); font-weight: 500;">DASHBOARD_ENV</div>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-text">SETUP: <span id="progress-text">0%</span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- IFRAME REPLACES DYNAMIC CONTENT -->
+            <iframe id="content-frame" name="content-frame" title="Main Content Area"></iframe>
+            
+            <!-- Module Loader Overlay -->
+            <div id="module-loader" class="module-loader">
+                <div class="spinner"></div>
+                <div class="loader-text">CONNECTING TO MODULE...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal System (Accessible by iframes via window.parent) -->
+    <div id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title" style="font-family: var(--font-tech);">System Action</h3>
+                <button class="modal-close" id="close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --- GLOBAL STATE (Exposed to iframes via window.parent) ---
+        // Used to sync the calendar events across pages
+        window.complianceEvents = [
+            { id: 'evt-1', title: 'Master Service Agreement Renewal', date: '2026-03-28', region: 'Global' }
+        ];
+
+        // --- PROGRESS SYSTEM (Exposed to iframes via window.parent) ---
+        const globalCompletedTasks = new Set();
+        const TOTAL_TASKS_IN_APP = 19;
+
+        // Child iframes will call this function: window.parent.updateSystemProgress('task_id', true/false)
+        window.updateSystemProgress = function(taskId, isCompleted) {
+            if (isCompleted) {
+                globalCompletedTasks.add(taskId);
+            } else {
+                globalCompletedTasks.delete(taskId);
+            }
+            
+            let percent = Math.round((globalCompletedTasks.size / TOTAL_TASKS_IN_APP) * 100);
+            percent = Math.min(percent, 100); // Cap at 100%
+            
+            document.getElementById('progress-fill').style.width = `${percent}%`;
+            document.getElementById('progress-text').innerText = `${percent}%`;
+
+            if (percent >= 100) triggerSuccess();
+        };
+
+        // --- MODAL SYSTEM (Exposed to iframes) ---
+        window.openSystemModal = function(title, content) {
+            document.getElementById('modal-title').innerHTML = title;
+            document.getElementById('modal-body').innerHTML = content;
+            document.getElementById('modal-overlay').classList.add('active');
+        };
+
+        document.getElementById('close-modal').addEventListener('click', () => {
+            document.getElementById('modal-overlay').classList.remove('active');
+        });
+
+        // Interactive Calendar Modal Function (Exposed globally)
+        window.showEventsForDate = function(dateStr) {
+            const events = window.complianceEvents.filter(ev => ev.date === dateStr);
+            if (events.length === 0) return;
+
+            const dateObj = new Date(dateStr + 'T12:00:00');
+            const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            
+            let html = '<div style="display:flex; flex-direction:column; gap:12px; margin-bottom: 8px;">';
+            events.forEach(ev => {
+                html += `
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; display: flex; align-items: flex-start; gap: 16px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+                        <div style="background: rgba(255, 80, 17, 0.1); padding: 10px; border-radius: 8px; color: var(--primary); flex-shrink: 0;">
+                            <i data-lucide="bell-ring" style="width: 24px; height: 24px;"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; font-size: 1.05rem; color: var(--text-main); margin-bottom: 6px; line-height: 1.3;">${ev.title}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                                <i data-lucide="globe" style="width:14px; height:14px;"></i> ${ev.region}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            window.openSystemModal(`<i data-lucide="calendar" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px; color: var(--primary);"></i> Trackers for ${formattedDate}`, html);
+            
+            // Re-initialize icons inside the dynamically generated modal content
+            setTimeout(() => { if(window.lucide) window.lucide.createIcons(); }, 10);
+        };
+
+        function triggerSuccess() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+            window.openSystemModal('System Complete', '<h2 style="color:var(--success); text-align:center;">100% COMPLIANCE REACHED</h2>');
+        }
+
+        // --- IFRAME ROUTING SYSTEM ---
+        const iframe = document.getElementById('content-frame');
+
+        // Automatically inject styles and icons into local child pages
+        iframe.addEventListener('load', function() {
+            // Hide the loading overlay when any content (or error banner) finishes loading
+            document.getElementById('module-loader').classList.remove('active');
+            
+            try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                if (iframeDoc && iframe.src !== 'about:blank' && !iframe.src.startsWith('http')) {
+                    // Inject Parent Styles
+                    if (!iframeDoc.getElementById('injected-dashboard-styles')) {
+                        const style = iframeDoc.createElement('style');
+                        style.id = 'injected-dashboard-styles';
+                        let parentCSS = '';
+                        document.querySelectorAll('style').forEach(s => parentCSS += s.innerHTML);
+                        
+                        // Enforce max-width constraint expanded to exactly fit 4 cards beautifully on ultrawides
+                        parentCSS += 'body { padding: 32px; margin: 0 auto !important; background: transparent; overflow-x: hidden; overflow-y: auto !important; max-width: 1600px; box-sizing: border-box; display: block; }';
+                        
+                        style.innerHTML = parentCSS;
+                        iframeDoc.head.appendChild(style);
+                    }
+                    
+                    // Inject and Initialize Icons
+                    if (!iframeDoc.querySelector('script[src*="lucide"]')) {
+                        const script = iframeDoc.createElement('script');
+                        script.src = "https://unpkg.com/lucide@latest";
+                        script.onload = () => { if(iframe.contentWindow.lucide) iframe.contentWindow.lucide.createIcons(); };
+                        iframeDoc.head.appendChild(script);
+                    } else if (iframe.contentWindow.lucide) {
+                        iframe.contentWindow.lucide.createIcons();
+                    }
+                }
+            } catch(e) {
+                console.warn("Cross-origin iframe load. Dynamic styles not injected.", e);
+            }
+        });
+        
+        function loadPage(url, navElement) {
+            // Trigger Loading Animation Overlay
+            document.getElementById('module-loader').classList.add('active');
+
+            // Update Active State
+            if (navElement) {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                navElement.classList.add('active');
+            }
+
+            // Close mobile menu
+            document.getElementById('sidebar').classList.remove('open');
+
+            // Handle External links vs Internal Views
+            if (url.startsWith('http')) {
+                iframe.removeAttribute('srcdoc');
+                iframe.src = url;
+                return;
+            }
+
+            // === VIRTUAL FILE SYSTEM (For Preview Environment Only) ===
+            // Contains ONLY the requested static sections
+            if (VFS[url]) {
+                // We pull styles directly from the parent to simulate what the onload event does for actual files
+                let parentCSS = '';
+                document.querySelectorAll('style').forEach(s => parentCSS += s.innerHTML);
+                
+                const htmlTemplate = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+                        <script src="https://unpkg.com/lucide@latest"><\/script>
+                        <style>
+                            ${parentCSS}
+                            /* Force scrollability and perfect centering constrained by max-width inside the iframe */
+                            body { padding: 32px; margin: 0 auto !important; background: transparent; overflow-x: hidden; overflow-y: auto !important; max-width: 1600px; box-sizing: border-box; display: block; }
+                        </style>
+                    </head>
+                    <body>
+                        ${VFS[url]}
+                        <script>
+                            lucide.createIcons();
+                            function updateProgress(checkbox, taskId) {
+                                window.parent.updateSystemProgress(taskId, checkbox.checked);
+                                if(checkbox.checked) checkbox.parentElement.classList.add('completed');
+                                else checkbox.parentElement.classList.remove('completed');
+                            }
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+                iframe.srcdoc = htmlTemplate;
+            } else {
+                // Default local file load (For all dynamically added pages)
+                // Check if the file exists using fetch, display error banner if missing
+                fetch(url, { method: 'HEAD' })
+                    .then(response => {
+                        if (response.ok) {
+                            iframe.removeAttribute('srcdoc'); // Must clear srcdoc before setting src
+                            iframe.src = url;
+                        } else {
+                            renderErrorBanner(url);
+                        }
+                    })
+                    .catch(e => {
+                        // Enforce Error Banner even if fetch entirely fails (e.g. CORS on missing local file)
+                        renderErrorBanner(url);
+                    });
+            }
+        }
+        
+        function renderErrorBanner(url) {
+            let parentCSS = '';
+            document.querySelectorAll('style').forEach(s => parentCSS += s.innerHTML);
+            const errorHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
+                    <script src="https://unpkg.com/lucide@latest"><\/script>
+                    <style>
+                        ${parentCSS}
+                        .error-wrapper { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 64px); width: 100%; }
+                        .error-container { text-align: center; max-width: 500px; padding: 40px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="error-wrapper">
+                        <div class="error-container">
+                            <i data-lucide="alert-triangle" style="width: 64px; height: 64px; color: var(--warning); margin-bottom: 24px; display: inline-block;"></i>
+                            <h2 style="font-family: var(--font-tech); margin-bottom: 16px; color: var(--text-main);">Module Not Found</h2>
+                            <p style="color: var(--text-muted); margin-bottom: 24px; line-height: 1.6;">The requested application file was not found:<br><code style="color: var(--primary);">${url}</code><br><br>Please ensure this file exists in your project directory.</p>
+                            <button class="btn btn-outline" onclick="window.parent.document.querySelector('[data-url=\\'app/overview/overview.html\\']').click()">Return to Overview</button>
+                        </div>
+                    </div>
+                    <script>lucide.createIcons();<\/script>
+                </body>
+                </html>
+            `;
+            iframe.srcdoc = errorHtml;
+        }
+
+        // Attach listeners
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const url = e.currentTarget.getAttribute('data-url');
+                loadPage(url, e.currentTarget);
+            });
+        });
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        document.getElementById('mobile-close-btn').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.remove('open');
+        });
+
+        // =========================================================================
+        // MOCK DATA FOR DEMONSTRATION PURPOSES ONLY.
+        // This injects the inner-HTML into the iframe using srcdoc so the preview 
+        // works perfectly without needing actual local files in this environment.
+        // =========================================================================
+
+        const VFS = {
+            'app/overview/overview.html': `
+                <section>
+                    <div class="page-header fade-in">
+                        <h1 class="page-title">Welcome to LegalHUB</h1>
+                        <p class="page-intro">Your central control center for business legal infrastructure. Manage contracts, compliance, identity, and AI assistance from a single, secure interface.</p>
+                    </div>
+                    
+                    <!-- Top Video Card (Full Width) -->
+                    <div class="card" style="margin-bottom: 32px;">
+                        <h3 class="mb-4">System Overview</h3>
+                        
+                        <!-- YouTube Embed Container -->
+                        <div class="video-container" onclick="playYouTubeVideo(this, 'LXb3EKWsInQ')">
+                            <iframe src="" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                            <div class="thumbnail-overlay">
+                                <div class="video-play-btn">
+                                    <i data-lucide="play" style="fill: white; color: white; width: 32px; height: 32px; margin-left: 4px;"></i>
+                                </div>
+                                <span style="position:absolute; bottom:16px; left:16px; font-family:var(--font-code); font-size:12px; color: rgba(255,255,255,0.8); z-index: 3; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">INTRO_TO_LEGALHUB.MP4</span>
+                            </div>
+                        </div>
+
+                        <p class="text-sm">Learn how to establish your business legal architecture, generate automated contracts, and ensure ongoing compliance.</p>
+                    </div>
+
+                    <!-- 4-column layout holding exactly 4 standard-sized cards (Second row) -->
+                    <div class="grid-4">
+                        <!-- Card 1: Initial Setup Checklist -->
+                        <div class="card">
+                            <h3 class="mb-4"><i data-lucide="check-square" style="vertical-align: middle; margin-right: 8px; color: var(--primary);"></i> Initial Setup Checklist</h3>
+                            <div class="checklist">
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_1')"><span>Understand platform purpose</span></label>
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_2')"><span>Review navigation menu architecture</span></label>
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_3')"><span>Understand each module function</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Active Warnings -->
+                        <div class="card" id="warning-card">
+                            <h3 class="mb-4" id="warning-title"><i data-lucide="shield-alert" style="vertical-align: middle; margin-right: 8px; color: var(--warning);"></i> Active Warnings</h3>
+                            <div id="warning-box" style="background: rgba(255,212,59,0.1); border-left: 3px solid var(--warning); padding: 12px; border-radius: 4px; margin-bottom: 12px;">
+                                <strong id="warning-strong" style="color: var(--warning); display: block; margin-bottom: 4px;">Profile Incomplete</strong>
+                                <span id="warning-span" class="text-sm">Your Commercial Profile is missing key registration documents.</span>
+                            </div>
+                            <button id="warning-btn" class="btn btn-outline" style="width: 100%; justify-content: center;" onclick="window.parent.document.querySelector('[data-url=\\'app/commercial-profile/profile-dashboard.html\\']').click()">Resolve Now</button>
+                        </div>
+
+                        <!-- Card 3: Contract Schedule / Calendar Card -->
+                        <div class="card">
+                            <h3 class="mb-4"><i data-lucide="calendar-days" style="vertical-align: middle; margin-right: 8px; color: var(--primary);"></i> Contract Schedule</h3>
+                            <p class="text-sm mb-4">Track upcoming renewals, expirations, and compliance deadlines.</p>
+                            <div class="calendar-container">
+                                <div class="calendar-header">
+                                    <button class="btn btn-outline" style="padding: 6px 12px; width: auto; border-color: rgba(255,255,255,0.1);"><i data-lucide="chevron-left" style="width:16px; height:16px;"></i></button>
+                                    <span style="font-family: var(--font-tech); font-weight: 500;">MARCH 2026</span>
+                                    <button class="btn btn-outline" style="padding: 6px 12px; width: auto; border-color: rgba(255,255,255,0.1);"><i data-lucide="chevron-right" style="width:16px; height:16px;"></i></button>
+                                </div>
+                                <div class="calendar-grid" id="calendar-grid">
+                                    <div class="calendar-day-header">Su</div><div class="calendar-day-header">Mo</div><div class="calendar-day-header">Tu</div><div class="calendar-day-header">We</div><div class="calendar-day-header">Th</div><div class="calendar-day-header">Fr</div><div class="calendar-day-header">Sa</div>
+                                    <div class="calendar-day muted">22</div><div class="calendar-day muted">23</div><div class="calendar-day muted">24</div><div class="calendar-day muted">25</div><div class="calendar-day muted">26</div><div class="calendar-day muted">27</div><div class="calendar-day muted">28</div>
+                                    <div class="calendar-day">1</div><div class="calendar-day">2</div><div class="calendar-day">3</div><div class="calendar-day">4</div><div class="calendar-day">5</div><div class="calendar-day">6</div><div class="calendar-day">7</div>
+                                    <div class="calendar-day">8</div><div class="calendar-day">9</div><div class="calendar-day">10</div><div class="calendar-day">11</div><div class="calendar-day">12</div><div class="calendar-day">13</div><div class="calendar-day">14</div>
+                                    <div class="calendar-day">15</div><div class="calendar-day active">16</div><div class="calendar-day">17</div><div class="calendar-day">18</div><div class="calendar-day">19</div><div class="calendar-day">20</div><div class="calendar-day">21</div>
+                                    <div class="calendar-day">22</div><div class="calendar-day">23</div><div class="calendar-day">24</div><div class="calendar-day">25</div><div class="calendar-day">26</div><div class="calendar-day">27</div><div class="calendar-day">28</div>
+                                    <div class="calendar-day">29</div><div class="calendar-day">30</div><div class="calendar-day">31</div><div class="calendar-day muted">1</div><div class="calendar-day muted">2</div><div class="calendar-day muted">3</div><div class="calendar-day muted">4</div>
+                                </div>
+                                <!-- Dynamic Event List -->
+                                <div id="upcoming-events-list"></div>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Recent Activity Card -->
+                        <div class="card">
+                            <h3 class="mb-4"><i data-lucide="activity" style="vertical-align: middle; margin-right: 8px; color: var(--primary);"></i> Recent Activity</h3>
+                            <p class="text-sm mb-4">Latest actions and document status updates across your organization.</p>
+                            <div class="checklist" style="margin-top: 8px;">
+                                <div class="check-item" style="cursor: default; background: transparent; border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 0;">
+                                    <div style="background: rgba(81, 207, 102, 0.1); padding: 8px; border-radius: 8px; display: flex;">
+                                        <i data-lucide="file-check" style="color: var(--success); width: 20px; height: 20px;"></i>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <div style="font-weight:500; font-size: 0.95rem; color: var(--text-main);">NDA Countersigned</div>
+                                        <div class="text-sm">Acme Corp · 2 hours ago</div>
+                                    </div>
+                                </div>
+                                <div class="check-item" style="cursor: default; background: transparent; border-bottom: 1px solid rgba(255,255,255,0.05); border-radius: 0;">
+                                    <div style="background: rgba(255, 80, 17, 0.1); padding: 8px; border-radius: 8px; display: flex;">
+                                        <i data-lucide="upload-cloud" style="color: var(--primary); width: 20px; height: 20px;"></i>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <div style="font-weight:500; font-size: 0.95rem; color: var(--text-main);">Articles of Incorporation Added</div>
+                                        <div class="text-sm">System Vault · Yesterday</div>
+                                    </div>
+                                </div>
+                                <div class="check-item" style="cursor: default; background: transparent; border-radius: 0;">
+                                    <div style="background: rgba(255, 212, 59, 0.1); padding: 8px; border-radius: 8px; display: flex;">
+                                        <i data-lucide="clock" style="color: var(--warning); width: 20px; height: 20px;"></i>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <div style="font-weight:500; font-size: 0.95rem; color: var(--text-main);">Pending Signature</div>
+                                        <div class="text-sm">Employee Agreement - Jane Doe · 3 days ago</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline" style="width: 100%; justify-content: center; margin-top: 24px; border-color: rgba(255,255,255,0.1); color: var(--text-main);">View Complete Audit Log</button>
+                        </div>
+                    </div>
+
+                    <!-- Full Width Clickable Banner -->
+                    <div style="margin-top: 8px; margin-bottom: 24px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 80, 17, 0.2); cursor: pointer; transition: all 0.3s ease;" 
+                         onclick="window.parent.open('https://legalhub.com/special-offer', '_blank')"
+                         onmouseover="this.style.boxShadow='0 0 30px rgba(255, 80, 17, 0.3)'; this.style.borderColor='var(--primary)';"
+                         onmouseout="this.style.boxShadow='none'; this.style.borderColor='rgba(255, 80, 17, 0.2)';">
+                        <img src="https://bucket.mlcdn.com/a/3336/3336910/images/63cbab869ab6b2aa44cdb6d95f760c7cd1dddef3.png" alt="Special Offer Banner" style="width: 100%; height: auto; display: block;">
+                    </div>
+
+                    <script>
+                        // Dynamically check if profile was completed to update the Overview status
+                        if (sessionStorage.getItem('profile_completed_confetti') === 'true') {
+                            document.getElementById('warning-title').innerHTML = '<i data-lucide="shield-check" style="vertical-align: middle; margin-right: 8px; color: var(--success);"></i> System Status';
+                            
+                            const box = document.getElementById('warning-box');
+                            box.style.background = 'rgba(81, 207, 102, 0.1)';
+                            box.style.borderLeft = '3px solid var(--success)';
+                            
+                            const str = document.getElementById('warning-strong');
+                            str.style.color = 'var(--success)';
+                            str.innerText = 'Profile Verified';
+                            
+                            document.getElementById('warning-span').innerText = 'Your Commercial Profile is complete and securely stored in the Vault.';
+                            
+                            const btn = document.getElementById('warning-btn');
+                            if(btn) btn.style.display = 'none';
+                        }
+
+                        // Sync Global Calendar Events
+                        function renderCalendar() {
+                            const events = window.parent.complianceEvents || [];
+                            const eventList = document.getElementById('upcoming-events-list');
+                            const days = document.querySelectorAll('.calendar-day:not(.muted)');
+                            
+                            // Reset markers
+                            days.forEach(d => {
+                                d.classList.remove('has-event');
+                                d.removeAttribute('onclick');
+                            });
+                            eventList.innerHTML = '';
+
+                            let hasEventsThisMonth = false;
+
+                            // Sort events by date
+                            events.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(ev => {
+                                // Add markers (Hardcoded to March 2026 for visualization)
+                                const parts = ev.date.split('-');
+                                if (parts.length === 3 && parts[0] === '2026' && parts[1] === '03') {
+                                    const dayNum = parseInt(parts[2], 10);
+                                    days.forEach(d => {
+                                        if(parseInt(d.innerText, 10) === dayNum) {
+                                            d.classList.add('has-event');
+                                            d.setAttribute('onclick', \`window.parent.showEventsForDate('\${ev.date}')\`);
+                                        }
+                                    });
+                                }
+
+                                // Create List Items (Showing all future/current events)
+                                hasEventsThisMonth = true;
+                                const dateObj = new Date(ev.date + 'T12:00:00');
+                                const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                                
+                                eventList.innerHTML += \`
+                                    <div style="margin-top: 12px; padding: 12px; background: rgba(255,212,59,0.1); border-left: 2px solid var(--warning); border-radius: 4px;">
+                                        <div style="font-weight: 600; font-size: 0.9rem; color: var(--warning); margin-bottom: 4px;">\${ev.title}</div>
+                                        <div class="text-sm">\${ev.region} · Due: \${formattedDate}</div>
+                                    </div>
+                                \`;
+                            });
+
+                            if(!hasEventsThisMonth) {
+                                eventList.innerHTML = '<div style="margin-top:16px; text-align:center; color:var(--text-muted); font-size:0.85rem;">No upcoming events tracked.</div>';
+                            }
+                        }
+                        renderCalendar();
+
+                        // Function to handle custom Youtube thumbnail logic
+                        function playYouTubeVideo(container, videoId) {
+                            const iframe = container.querySelector('iframe');
+                            const overlay = container.querySelector('.thumbnail-overlay');
+                            // Load youtube with autoplay
+                            iframe.src = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0';
+                            // Hide overlay & remove cursor pointer
+                            overlay.style.opacity = '0';
+                            setTimeout(() => overlay.style.display = 'none', 300);
+                            container.style.cursor = 'default';
+                            container.onclick = null;
+                        }
+                    <\/script>
+                </section>`,
+            'app/compliance/tracking.html': `
+                <section>
+                    <div class="page-header">
+                        <h1 class="page-title">Compliance Tracking</h1>
+                        <p class="page-intro">Create automated reminders for critical identity, business, and vehicular compliance renewals. These will securely sync to your master contract schedule.</p>
+                    </div>
+                    
+                    <div class="grid-layout" style="grid-template-columns: 1fr 1fr;">
+                        
+                        <!-- Create Reminder Card -->
+                        <div class="card">
+                            <div class="flex-between mb-4">
+                                <h3><i data-lucide="bell-plus" style="vertical-align: middle; margin-right: 8px; color: var(--primary);"></i> Add New Reminder</h3>
+                            </div>
+                            <form id="reminder-form" onsubmit="handleReminderSubmit(event)">
+                                <div class="form-group">
+                                    <label>Operating Region</label>
+                                    <select id="comp-region-select" class="form-control" onchange="updateComplianceTemplates()">
+                                        <option value="USA" selected>United States</option>
+                                        <option value="EU">European Union</option>
+                                        <option value="DR">Dominican Republic</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Preset Template</label>
+                                    <select id="comp-template-select" class="form-control">
+                                        <!-- Populated via JS -->
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Custom Name / Identifier (Optional)</label>
+                                    <input type="text" id="comp-custom-name" class="form-control" placeholder="e.g. CEO's License, Truck Plate #XYZ">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Expiration / Renewal Date</label>
+                                    <input type="date" id="comp-date" class="form-control" required style="color-scheme: dark;">
+                                </div>
+
+                                <button type="submit" class="btn" style="width: 100%; justify-content: center; margin-top: 16px;">
+                                    <i data-lucide="plus"></i> Create Tracker
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Active Trackers Card -->
+                        <div class="card">
+                            <h3 class="mb-4"><i data-lucide="list-checks" style="vertical-align: middle; margin-right: 8px; color: var(--primary);"></i> Active Trackers</h3>
+                            <div class="checklist" id="tracker-list" style="margin-top: 16px;">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Master Compliance Calendar (Full Width) -->
+                    <div class="card" style="margin-top: 0;">
+                        <h3 class="mb-4"><i data-lucide="calendar" style="vertical-align: middle; margin-right: 8px; color: var(--primary);"></i> Master Compliance Calendar</h3>
+                        <div class="calendar-container">
+                            <div class="calendar-header">
+                                <button type="button" class="btn btn-outline" style="padding: 6px 12px; width: auto; border-color: rgba(255,255,255,0.1);" onclick="changeMonth(-1)"><i data-lucide="chevron-left" style="width:16px; height:16px;"></i></button>
+                                <span id="comp-calendar-month-year" style="font-family: var(--font-tech); font-weight: 500; text-transform: uppercase;"></span>
+                                <button type="button" class="btn btn-outline" style="padding: 6px 12px; width: auto; border-color: rgba(255,255,255,0.1);" onclick="changeMonth(1)"><i data-lucide="chevron-right" style="width:16px; height:16px;"></i></button>
+                            </div>
+                            <div class="calendar-grid" id="comp-calendar-grid">
+                                <!-- Rendered dynamically via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        const regionalTemplates = {
+                            'USA': [
+                                'Personal ID / Passport', 
+                                'Driver License', 
+                                'Health Insurance', 
+                                'Vehicle Insurance', 
+                                'Vehicle Registration', 
+                                'License Plate Renewal', 
+                                'Business Registration Renewal', 
+                                'Commercial License'
+                            ],
+                            'EU': [
+                                'National ID / Passport', 
+                                'Driver License', 
+                                'Health Insurance', 
+                                'Vehicle Insurance', 
+                                'Vehicle Registration', 
+                                'Vignette / Road Tax', 
+                                'Trade Register Extract Renewal', 
+                                'Commercial / VAT Number'
+                            ],
+                            'DR': [
+                                'Cédula de Identidad y Electoral', 
+                                'Licencia de Conducir', 
+                                'Seguro Médico (ARS)', 
+                                'Seguro de Vehículo', 
+                                'Matrícula de Vehículo', 
+                                'Marbete (Derecho de Circulación)', 
+                                'Registro Mercantil (Cámara de Comercio)', 
+                                'Licencia Comercial / RNC'
+                            ]
+                        };
+
+                        // Calendar State variables
+                        let currentDate = new Date();
+                        let currentMonth = currentDate.getMonth(); 
+                        let currentYear = currentDate.getFullYear();
+
+                        function updateComplianceTemplates() {
+                            const region = document.getElementById('comp-region-select').value;
+                            const select = document.getElementById('comp-template-select');
+                            
+                            select.innerHTML = '';
+                            regionalTemplates[region].forEach(template => {
+                                const opt = document.createElement('option');
+                                opt.value = template;
+                                opt.innerText = template;
+                                select.appendChild(opt);
+                            });
+                        }
+
+                        function renderTrackerList() {
+                            const events = window.parent.complianceEvents || [];
+                            const list = document.getElementById('tracker-list');
+                            list.innerHTML = '';
+
+                            if (events.length === 0) {
+                                list.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding: 20px;">No active trackers found.</div>';
+                                return;
+                            }
+
+                            // Sort chronologically
+                            const sortedEvents = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                            sortedEvents.forEach(ev => {
+                                const dateObj = new Date(ev.date + 'T12:00:00');
+                                const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                                
+                                list.innerHTML += \`
+                                    <div class="check-item" style="cursor: default; align-items: flex-start; background: rgba(0,0,0,0.2);">
+                                        <div style="background: rgba(255, 80, 17, 0.1); padding: 8px; border-radius: 8px; display: flex; margin-top: 2px; flex-shrink: 0;">
+                                            <i data-lucide="bell" style="color: var(--primary); width: 18px; height: 18px;"></i>
+                                        </div>
+                                        <div style="flex:1; min-width: 0;">
+                                            <div style="font-weight:600; font-size: 0.95rem; color: var(--text-main); margin-bottom: 6px; line-height: 1.3;">\${ev.title}</div>
+                                            <div class="text-sm" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; gap: 6px 12px;">
+                                                <span style="display: flex; align-items: center; gap: 4px; overflow: hidden; flex-grow: 1; min-width: 100px;"><i data-lucide="globe" style="width:12px; height:12px; flex-shrink: 0;"></i> <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">\${ev.region}</span></span>
+                                                <span style="color: var(--warning); display: flex; align-items: center; gap: 4px; white-space: nowrap; flex-shrink: 0;"><i data-lucide="calendar" style="width:12px; height:12px; flex-shrink: 0;"></i> \${formattedDate}</span>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-outline" style="padding: 6px; width: auto; border-color: rgba(255,255,255,0.1); color: var(--danger); flex-shrink: 0;" onclick="deleteTracker('\${ev.id}')" title="Delete Reminder">
+                                            <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                                        </button>
+                                    </div>
+                                \`;
+                            });
+                            
+                            if(window.lucide) window.lucide.createIcons();
+                        }
+
+                        function changeMonth(offset) {
+                            currentMonth += offset;
+                            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+                            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+                            renderComplianceCalendar();
+                        }
+
+                        function renderComplianceCalendar() {
+                            const events = window.parent.complianceEvents || [];
+                            const grid = document.getElementById('comp-calendar-grid');
+                            const monthYearText = document.getElementById('comp-calendar-month-year');
+                            
+                            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                            monthYearText.innerText = monthNames[currentMonth] + ' ' + currentYear;
+                            
+                            grid.innerHTML = '<div class="calendar-day-header">Su</div><div class="calendar-day-header">Mo</div><div class="calendar-day-header">Tu</div><div class="calendar-day-header">We</div><div class="calendar-day-header">Th</div><div class="calendar-day-header">Fr</div><div class="calendar-day-header">Sa</div>';
+                            
+                            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+                            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                            const prevDaysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+                            
+                            // Prev month muted days
+                            for (let i = firstDay - 1; i >= 0; i--) {
+                                grid.innerHTML += \`<div class="calendar-day muted">\${prevDaysInMonth - i}</div>\`;
+                            }
+                            
+                            // Current month days
+                            const today = new Date();
+                            for (let i = 1; i <= daysInMonth; i++) {
+                                const dateStr = \`\${currentYear}-\${String(currentMonth + 1).padStart(2, '0')}-\${String(i).padStart(2, '0')}\`;
+                                let hasEvent = events.some(ev => ev.date === dateStr);
+                                let isToday = (i === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear());
+                                
+                                let classes = "calendar-day";
+                                if (isToday) classes += " active";
+                                if (hasEvent) classes += " has-event";
+                                
+                                // Tooltip & Modal Click integration
+                                let tooltip = '';
+                                let onclickAttr = '';
+                                if (hasEvent) {
+                                    const dayEvents = events.filter(ev => ev.date === dateStr).map(ev => ev.title).join(', ');
+                                    tooltip = \`title="\${dayEvents}"\`;
+                                    onclickAttr = \`onclick="window.parent.showEventsForDate('\${dateStr}')"\`;
+                                }
+                                
+                                grid.innerHTML += \`<div class="\${classes}" \${tooltip} \${onclickAttr}>\${i}</div>\`;
+                            }
+                            
+                            // Next month muted days
+                            const totalCells = firstDay + daysInMonth;
+                            const nextDays = (totalCells % 7 === 0) ? 0 : 7 - (totalCells % 7);
+                            for (let i = 1; i <= nextDays; i++) {
+                                grid.innerHTML += \`<div class="calendar-day muted">\${i}</div>\`;
+                            }
+                        }
+
+                        function handleReminderSubmit(e) {
+                            e.preventDefault();
+                            const regionSelect = document.getElementById('comp-region-select');
+                            const region = regionSelect.options[regionSelect.selectedIndex].text;
+                            
+                            const template = document.getElementById('comp-template-select').value;
+                            const customName = document.getElementById('comp-custom-name').value;
+                            const date = document.getElementById('comp-date').value;
+
+                            const finalTitle = customName ? \`\${template} (\${customName})\` : template;
+
+                            const newEvent = {
+                                id: 'evt-' + Date.now(),
+                                title: finalTitle,
+                                date: date,
+                                region: region
+                            };
+
+                            // Save to global array
+                            if (!window.parent.complianceEvents) window.parent.complianceEvents = [];
+                            window.parent.complianceEvents.push(newEvent);
+
+                            // Reset form and re-render components
+                            document.getElementById('comp-custom-name').value = '';
+                            document.getElementById('comp-date').value = '';
+                            
+                            window.parent.openSystemModal('Tracker Created', '<p style="text-align:center;">Your reminder for <strong>' + finalTitle + '</strong> has been added to the master contract schedule.</p>');
+                            
+                            renderTrackerList();
+                            renderComplianceCalendar();
+                        }
+
+                        // Attach delete logic globally so the inline onclick works
+                        window.deleteTracker = function(id) {
+                            if (window.parent.complianceEvents) {
+                                window.parent.complianceEvents = window.parent.complianceEvents.filter(ev => ev.id !== id);
+                                renderTrackerList();
+                                renderComplianceCalendar();
+                            }
+                        };
+
+                        // Initialize
+                        updateComplianceTemplates();
+                        renderTrackerList();
+                        renderComplianceCalendar();
+                    <\/script>
+                </section>
+            `,
+            'app/commercial-profile/profile-dashboard.html': `
+                <section>
+                    <div class="page-header">
+                        <h1 class="page-title">Commercial Profile</h1>
+                        <p class="page-intro">Create and manage the definitive legal identity of your business. Store compliance records, structure details, and registration files.</p>
+                    </div>
+                    <!-- Uses default .grid-layout for auto-fit standard behavior on forms -->
+                    <div class="grid-layout">
+                        <div class="card" style="grid-column: span 2;">
+                            <div class="flex-between mb-4">
+                                <h3>Business Identity</h3><span class="badge warning" id="profile-status">Pending Verification</span>
+                            </div>
+                            <form id="profile-form" onsubmit="handleProfileSubmit(event)">
+                                <div class="grid-layout" style="grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 0;">
+                                    
+                                    <!-- Region Selector -->
+                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                        <label>Operating Region</label>
+                                        <select id="region-select" class="form-control" style="border-color: var(--primary);" onchange="updateRegionFields()">
+                                            <option value="USA" selected>United States</option>
+                                            <option value="EU">European Union</option>
+                                            <option value="DR">Dominican Republic</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Company Legal Name</label>
+                                        <input type="text" class="form-control" required placeholder="e.g. Acme Tech SRL">
+                                    </div>
+                                    <div class="form-group">
+                                        <label id="tax-id-label">Employer Identification Number (EIN)</label>
+                                        <input type="text" id="tax-id-input" class="form-control" required placeholder="e.g. 12-3456789">
+                                    </div>
+                                    <div class="form-group">
+                                        <label id="reg-label">State of Incorporation</label>
+                                        <input type="text" id="reg-input" class="form-control" required placeholder="e.g. Delaware, LLC">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Commercial Address</label>
+                                        <input type="text" class="form-control" required placeholder="Full Legal Street Address">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Commercial Phone Number</label>
+                                        <input type="tel" class="form-control" required placeholder="+1 (809) 000-0000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Commercial Email</label>
+                                        <input type="email" class="form-control" required placeholder="legal@company.com">
+                                    </div>
+                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                        <label>Legal Representative</label>
+                                        <input type="text" class="form-control" required placeholder="Full Name of Signatory">
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap;">
+                                    <button type="submit" class="btn"><i data-lucide="save"></i> Save Identity Data</button>
+                                    <button type="button" class="btn" onclick="window.parent.openSystemModal('Checklist', 'Downloading your compliance checklist PDF...')"><i data-lucide="download"></i> Download Checklist</button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="card">
+                            <h3 class="mb-4">Required Documents</h3>
+                            <p class="text-sm mb-4">Upload and verify your core business registration files.</p>
+                            <div class="checklist" id="dynamic-checklist">
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_prof_1')"><span>Add entity legal name</span></label>
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_prof_2')"><span>Add EIN</span></label>
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_prof_3')"><span>Upload Articles of Incorporation</span></label>
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_prof_4')"><span>Add registered agent address</span></label>
+                                <label class="check-item"><input type="checkbox" onchange="updateProgress(this, 'task_prof_5')"><span>Add authorized signatory</span></label>
+                            </div>
+                        </div>
+
+                        <!-- New Digital Services Card -->
+                        <div class="card">
+                            <h3 class="mb-4">Digital Services</h3>
+                            <p class="text-sm mb-4">Establish your business presence with our trusted partner services.</p>
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <button id="btn-domain" class="btn btn-outline" style="justify-content: flex-start; text-align: left; border-color: rgba(255,255,255,0.1); color: var(--text-main);" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='var(--text-main)'" onclick="window.parent.open('https://example.com/domain-usa', '_blank')">
+                                    <i data-lucide="globe" style="width: 18px; height: 18px; margin-right: 8px;"></i> Get a Domain Name
+                                </button>
+                                <button id="btn-email" class="btn btn-outline" style="justify-content: flex-start; text-align: left; border-color: rgba(255,255,255,0.1); color: var(--text-main);" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='var(--text-main)'" onclick="window.parent.open('https://example.com/email-usa', '_blank')">
+                                    <i data-lucide="mail" style="width: 18px; height: 18px; margin-right: 8px;"></i> Professional Email
+                                </button>
+                                <button id="btn-voip" class="btn btn-outline" style="justify-content: flex-start; text-align: left; border-color: rgba(255,255,255,0.1); color: var(--text-main);" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='var(--text-main)'" onclick="window.parent.open('https://example.com/voip-usa', '_blank')">
+                                    <i data-lucide="phone-call" style="width: 18px; height: 18px; margin-right: 8px;"></i> Business VoIP Number
+                                </button>
+                                <button id="btn-postal" class="btn btn-outline" style="justify-content: flex-start; text-align: left; border-color: rgba(255,255,255,0.1); color: var(--text-main);" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='var(--text-main)'" onclick="window.parent.open('https://ipostal1.com/?ref=7505', '_blank')">
+                                    <i data-lucide="map-pin" style="width: 18px; height: 18px; margin-right: 8px;"></i> Virtual Address / Postal
+                                </button>
+                                <button id="btn-register" class="btn btn-outline" style="justify-content: flex-start; text-align: left; border-color: rgba(255,255,255,0.1); color: var(--text-main);" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.color='var(--text-main)'" onclick="window.parent.open('https://example.com/register-usa', '_blank')">
+                                    <i data-lucide="briefcase" style="width: 18px; height: 18px; margin-right: 8px;"></i> Register Your Business Name
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <!-- Full Width Clickable Banner -->
+                    <div style="margin-top: 8px; margin-bottom: 24px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 80, 17, 0.2); cursor: pointer; transition: all 0.3s ease;" 
+                         onclick="window.parent.open('https://legalhub.com/special-offer', '_blank')"
+                         onmouseover="this.style.boxShadow='0 0 30px rgba(255, 80, 17, 0.3)'; this.style.borderColor='var(--primary)';"
+                         onmouseout="this.style.boxShadow='none'; this.style.borderColor='rgba(255, 80, 17, 0.2)';">
+                        <img src="https://bucket.mlcdn.com/a/3336/3336910/images/63cbab869ab6b2aa44cdb6d95f760c7cd1dddef3.png" alt="Special Offer Banner" style="width: 100%; height: auto; display: block;">
+                    </div>
+
+                    <script>
+                        function updateRegionFields() {
+                            const region = document.getElementById('region-select').value;
+                            const taxLabel = document.getElementById('tax-id-label');
+                            const taxInput = document.getElementById('tax-id-input');
+                            const regLabel = document.getElementById('reg-label');
+                            const regInput = document.getElementById('reg-input');
+                            const checklistObj = document.getElementById('dynamic-checklist');
+                            
+                            // Digital Services Buttons
+                            const btnDomain = document.getElementById('btn-domain');
+                            const btnEmail = document.getElementById('btn-email');
+                            const btnVoip = document.getElementById('btn-voip');
+                            const btnPostal = document.getElementById('btn-postal');
+                            const btnRegister = document.getElementById('btn-register');
+
+                            if (region === 'DR') {
+                                taxLabel.innerText = 'Registration Number (RNC)';
+                                taxInput.placeholder = 'e.g. 1-30-12345-6';
+                                regLabel.innerText = 'Mercantile Registry Number';
+                                regInput.placeholder = 'e.g. 12345SDQ';
+                                checklistObj.innerHTML = '<label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_1\\')"><span>Add company legal name</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_2\\')"><span>Add RNC number</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_3\\')"><span>Upload Mercantile Registry</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_4\\')"><span>Add registered address</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_5\\')"><span>Add legal representative</span></label>';
+                                
+                                // Update Digital Service Links for DR
+                                btnDomain.setAttribute('onclick', "window.parent.open('https://example.com/domain-dr', '_blank')");
+                                btnEmail.setAttribute('onclick', "window.parent.open('https://example.com/email-dr', '_blank')");
+                                btnVoip.setAttribute('onclick', "window.parent.open('https://example.com/voip-dr', '_blank')");
+                                btnPostal.setAttribute('onclick', "window.parent.open('https://ipostal1.com/?ref=7505', '_blank')");
+                                btnRegister.setAttribute('onclick', "window.parent.open('https://onapi.gob.do', '_blank')");
+                                
+                            } else if (region === 'USA') {
+                                taxLabel.innerText = 'Employer Identification Number (EIN)';
+                                taxInput.placeholder = 'e.g. 12-3456789';
+                                regLabel.innerText = 'State of Incorporation';
+                                regInput.placeholder = 'e.g. Delaware, LLC';
+                                checklistObj.innerHTML = '<label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_1\\')"><span>Add entity legal name</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_2\\')"><span>Add EIN</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_3\\')"><span>Upload Articles of Incorporation</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_4\\')"><span>Add registered agent address</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_5\\')"><span>Add authorized signatory</span></label>';
+                                
+                                // Update Digital Service Links for USA
+                                btnDomain.setAttribute('onclick', "window.parent.open('https://example.com/domain-usa', '_blank')");
+                                btnEmail.setAttribute('onclick', "window.parent.open('https://example.com/email-usa', '_blank')");
+                                btnVoip.setAttribute('onclick', "window.parent.open('https://example.com/voip-usa', '_blank')");
+                                btnPostal.setAttribute('onclick', "window.parent.open('https://ipostal1.com/?ref=7505', '_blank')");
+                                btnRegister.setAttribute('onclick', "window.parent.open('https://example.com/register-usa', '_blank')");
+                                
+                            } else if (region === 'EU') {
+                                taxLabel.innerText = 'VAT Number / Tax ID';
+                                taxInput.placeholder = 'e.g. DE123456789';
+                                regLabel.innerText = 'Member State of Registration';
+                                regInput.placeholder = 'e.g. Germany, GmbH';
+                                checklistObj.innerHTML = '<label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_1\\')"><span>Add corporate name</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_2\\')"><span>Add VAT/EORI number</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_3\\')"><span>Upload Trade Register Extract</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_4\\')"><span>Add registered office address</span></label><label class="check-item"><input type="checkbox" onchange="updateProgress(this, \\'task_prof_5\\')"><span>Add managing director</span></label>';
+                                
+                                // Update Digital Service Links for EU
+                                btnDomain.setAttribute('onclick', "window.parent.open('https://example.com/domain-eu', '_blank')");
+                                btnEmail.setAttribute('onclick', "window.parent.open('https://example.com/email-eu', '_blank')");
+                                btnVoip.setAttribute('onclick', "window.parent.open('https://example.com/voip-eu', '_blank')");
+                                btnPostal.setAttribute('onclick', "window.parent.open('https://ipostal1.com/?ref=7505', '_blank')");
+                                btnRegister.setAttribute('onclick', "window.parent.open('https://example.com/register-eu', '_blank')");
+                            }
+                        }
+
+                        function handleProfileSubmit(e) {
+                            e.preventDefault();
+                            const regionSelect = document.getElementById('region-select');
+                            const regionText = regionSelect.options[regionSelect.selectedIndex].text;
+                            const hasSubmitted = sessionStorage.getItem('profile_completed_confetti');
+                            
+                            if (!hasSubmitted) {
+                                // First time submission - show confetti and congrats
+                                if (window.parent.confetti) {
+                                    var duration = 3 * 1000;
+                                    var animationEnd = Date.now() + duration;
+                                    var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+                                    function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+                                    var interval = setInterval(function() {
+                                        var timeLeft = animationEnd - Date.now();
+                                        if (timeLeft <= 0) return clearInterval(interval);
+                                        var particleCount = 50 * (timeLeft / duration);
+                                        window.parent.confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                                        window.parent.confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                                    }, 250);
+                                }
+                                
+                                window.parent.openSystemModal('Congratulations! 🎉', '<h3 style="color:var(--success); text-align:center; margin-bottom: 12px;">Profile Completed</h3><p style="text-align:center;">Your business identity for <strong>' + regionText + '</strong> has been securely stored in the Vault. You are now ready to generate compliant contracts.</p>');
+                                
+                                sessionStorage.setItem('profile_completed_confetti', 'true');
+                                
+                                // Update status badge visually
+                                const statusBadge = document.getElementById('profile-status');
+                                statusBadge.className = 'badge success';
+                                statusBadge.innerText = 'Verified';
+                                
+                                // Automatically check off the profile tasks dynamically
+                                document.querySelectorAll('#dynamic-checklist .check-item input').forEach(chk => {
+                                    if(!chk.checked) chk.click(); 
+                                });
+                            } else {
+                                // Subsequent saves
+                                window.parent.openSystemModal('Vault Updated', '<p style="text-align:center;">Profile Data for <strong>' + regionText + '</strong> has been securely updated.</p>');
+                            }
+                        }
+                    <\/script>
+                </section>`
+        };
+
+        // Load default view
+        window.addEventListener('DOMContentLoaded', () => {
+            loadPage('app/overview/overview.html', document.querySelector('[data-url="app/overview/overview.html"]'));
+        });
+    </script>
+</body>
+</html>
