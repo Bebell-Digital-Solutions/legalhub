@@ -1,1 +1,878 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Notice Generator</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+
+
+
+   <!-- Favicon -->
+    <link rel="icon" href="https://bucket.mlcdn.com/a/3336/3336910/images/4a30d6af5adca2f2bdb1574dee7253407c1ce92f.png">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        skin: 'var(--skin-color)',
+                        mirage: 'var(--mirage-color)',
+                        body: 'var(--bg-body)',
+                        card: 'var(--bg-card)',
+                        input: 'var(--bg-input)',
+                        textmain: 'var(--text-main)',
+                        textmuted: 'var(--text-muted)',
+                        textinverse: 'var(--text-inverse)',
+                        bordercolor: 'var(--border)',
+                        chartpending: 'var(--chart-pending)',
+                        chartcompleted: 'var(--chart-completed)',
+                        success: 'var(--success)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        code: ['Fira Code', 'monospace'],
+                        tech: ['Orbitron', 'monospace'],
+                    },
+                    boxShadow: {
+                        glow: 'var(--shadow-glow)',
+                        'glow-strong': 'var(--shadow-glow-strong)',
+                        custom: 'var(--shadow-md)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --skin-color: #ff5011;
+            --mirage-color: hsl(210, 10%, 23%);
+            --title-color: hsl(242, 8%, 98%);
+            --text-color: hsl(242, 8%, 80%);
+            --body-color: #0d0d0d;
+            --box-color: hsl(242, 14%, 12%);
+            
+            --bg-body: var(--body-color);
+            --bg-card: var(--box-color);
+            --bg-input: hsl(242, 14%, 16%);
+            
+            --text-main: var(--title-color);
+            --text-muted: var(--text-color);
+            --text-inverse: #ffffff;
+            
+            --border: var(--mirage-color);
+            --shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            
+            --border-radius-sm: 0.5rem;
+            --border-radius-md: 0.75rem;
+            --body-font: 'Inter', sans-serif;
+            
+            --chart-pending: #ef4444;
+            --chart-completed: #ff5011;
+
+            --scroll-box-color: var(--mirage-color); 
+            --scroll-thumb-color: var(--skin-color);
+
+            --success: #51cf66;
+            --bg-dark: var(--bg-body);
+            
+            --text-primary: var(--text-main);
+            --text-secondary: var(--text-muted);
+            
+            --gradient-1: linear-gradient(135deg, var(--skin-color) 0%, #ff7a33 100%);
+            --gradient-2: linear-gradient(135deg, #ff7a33 0%, var(--skin-color) 100%);
+            
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.2);
+            --shadow-glow: 0 0 30px rgba(255, 80, 17, 0.25);
+            --shadow-glow-strong: 0 0 50px rgba(255, 80, 17, 0.4);
+        }
+
+        ::-webkit-scrollbar { width: 8px; background: var(--bg-body); }
+        ::-webkit-scrollbar-track { background: var(--scroll-box-color); }
+        ::-webkit-scrollbar-thumb { background: var(--scroll-thumb-color); border-radius: var(--border-radius-md); }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html { font-size: 16px; height: 100%; }
+        body { font-family: var(--body-font); font-weight: 500; background: var(--bg-dark); color: var(--text-primary); line-height: 1.7; overflow-x: hidden; min-height: 100vh; }
+        
+        select option { background-color: var(--bg-card); color: var(--text-main); }
+
+        @media print {
+            body, #preview-container { background-color: white !important; color: black !important; }
+            * { color: black !important; border-color: #ccc !important; }
+            .print\:hidden { display: none !important; }
+            .print\:w-full { width: 100% !important; max-width: none !important; }
+            .print\:p-0 { padding: 0 !important; }
+            .print\:m-0 { margin: 0 !important; }
+            .print\:border-none { border: none !important; }
+            .print\:shadow-none { box-shadow: none !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 bg-mirage border border-skin text-textmain px-6 py-3 rounded-full shadow-glow flex items-center space-x-3 transition-all duration-300 opacity-0 pointer-events-none translate-y-[-20px]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-skin"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <span id="toast-message" class="font-medium text-sm"></span>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-card text-textmain p-4 md:p-6 border-b border-bordercolor shadow-custom print:hidden w-full">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="p-2 bg-mirage rounded-lg border border-bordercolor shadow-glow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-skin"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path><path d="m9 12 2 2 4-4"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-tight text-textinverse font-tech" data-i18n="headerTitle">Legal Notice Generator</h1>
+                    <p class="text-skin text-sm font-code" data-i18n="headerSubtitle">Multi-Región & Privacidad</p>
+                </div>
+            </div>
+            
+            <!-- Language Switcher -->
+            <div class="flex items-center gap-3 bg-mirage px-4 py-2 rounded-full border border-bordercolor shadow-md select-none">
+                <button id="lang-en" class="text-xs font-bold text-textmuted hover:text-skin transition-colors outline-none">EN</button>
+                <div class="w-10 h-5 bg-input rounded-full relative cursor-pointer" id="lang-switch">
+                    <div class="absolute w-5 h-5 bg-skin rounded-full top-0 left-0 transition-transform duration-300 transform translate-x-5 shadow-sm" id="lang-knob"></div>
+                </div>
+                <button id="lang-es" class="text-xs font-bold text-skin transition-colors outline-none">ES</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl w-full mx-auto p-4 md:p-6 lg:flex lg:gap-8 flex-grow">
+        
+        <!-- Left Column: Form -->
+        <section class="lg:w-1/3 bg-card p-6 rounded-xl border border-bordercolor shadow-custom mb-6 lg:mb-0 print:hidden shrink-0 h-fit">
+            <h2 class="text-xl font-bold mb-6 text-textinverse flex items-center gap-2 border-b border-bordercolor pb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-skin"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                <span class="i18n-text" data-i18n="formTitle">Datos del Documento</span>
+            </h2>
+            
+            <form id="legal-form" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-textmuted mb-1.5" data-i18n="labelRegion">Jurisdicción / Región</label>
+                    <select id="region" name="region" class="w-full p-2.5 border border-bordercolor rounded-lg focus:ring-2 focus:ring-skin focus:border-skin bg-input text-textmain outline-none transition-all">
+                        <option value="do">República Dominicana (Ley 172-13)</option>
+                        <option value="es">España / Unión Europea (RGPD)</option>
+                        <option value="us">United States (General / CCPA)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-textmuted mb-1.5" data-i18n="labelIndustry">Industria / Tipo de Sitio</label>
+                    <select id="industria" name="industria" class="w-full p-2.5 border border-bordercolor rounded-lg focus:ring-2 focus:ring-skin focus:border-skin bg-input text-textmain outline-none transition-all">
+                        <option value="general">Sitio Web General / Blog</option>
+                        <option value="ecommerce">Comercio Electrónico / SaaS</option>
+                        <option value="salud">Salud y Bienestar (Datos Sensibles)</option>
+                        <option value="financiero">Servicios Financieros / Legales</option>
+                    </select>
+                </div>
+
+                <hr class="border-bordercolor" />
+
+                <div>
+                    <label class="block text-sm font-medium text-textmuted mb-1.5" data-i18n="labelName">Nombre de la Empresa o Persona</label>
+                    <input type="text" id="nombre" name="nombre" data-i18n-placeholder="placeName" placeholder="Ej. Mi Empresa S.R.L. / LLC" class="w-full p-2.5 border border-bordercolor rounded-lg focus:ring-2 focus:ring-skin focus:border-skin bg-input text-textmain placeholder-textmuted/50 outline-none transition-all" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-textmuted mb-1.5" data-i18n="labelRnc">ID Fiscal (RNC, NIF/CIF, EIN)</label>
+                    <input type="text" id="rnc" name="rnc" data-i18n-placeholder="placeRnc" placeholder="Ej. 130-12345-1 / B12345678" class="w-full p-2.5 border border-bordercolor rounded-lg focus:ring-2 focus:ring-skin focus:border-skin bg-input text-textmain placeholder-textmuted/50 outline-none transition-all" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-textmuted mb-1.5" data-i18n="labelUrl">URL del Sitio Web</label>
+                    <input type="text" id="url" name="url" data-i18n-placeholder="placeUrl" placeholder="Ej. https://www.miempresa.com" class="w-full p-2.5 border border-bordercolor rounded-lg focus:ring-2 focus:ring-skin focus:border-skin bg-input text-textmain placeholder-textmuted/50 outline-none transition-all" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-textmuted mb-1.5" data-i18n="labelAddress">Dirección Completa</label>
+                    <input type="text" id="direccion" name="direccion" data-i18n-placeholder="placeAddress" placeholder="Ej. Calle Principal 123, Ciudad, País" class="w-full p-2.5 border border-bordercolor rounded-lg focus:ring-2 focus:ring-skin focus:border-skin bg-input text-textmain placeholder-textmuted/50 outline-none transition-all" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-textmuted mb-1.5" data-i18n="labelEmail">Correo Electrónico de Contacto</label>
+                    <input type="email" id="email" name="email" data-i18n-placeholder="placeEmail" placeholder="Ej. legal@miempresa.com" class="w-full p-2.5 border border-bordercolor rounded-lg focus:ring-2 focus:ring-skin focus:border-skin bg-input text-textmain placeholder-textmuted/50 outline-none transition-all" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-textmuted mb-1.5" data-i18n="labelPhone">Teléfono (Opcional)</label>
+                    <input type="text" id="telefono" name="telefono" data-i18n-placeholder="placePhone" placeholder="Ej. +1 809-555-5555" class="w-full p-2.5 border border-bordercolor rounded-lg focus:ring-2 focus:ring-skin focus:border-skin bg-input text-textmain placeholder-textmuted/50 outline-none transition-all" />
+                </div>
+
+                <div id="supervision-container" class="bg-input p-4 rounded-lg border border-bordercolor shadow-custom hidden">
+                    <label class="block text-sm font-medium text-skin mb-1.5" data-i18n="labelSupervision">Entidad Supervisora</label>
+                    <input type="text" id="supervision" name="supervision" data-i18n-placeholder="placeSupervision" placeholder="Ej. Superintendencia de Bancos (SIB)" class="w-full p-2.5 border border-mirage rounded-lg focus:ring-2 focus:ring-skin bg-body text-textmain placeholder-textmuted/50 outline-none transition-all" />
+                </div>
+
+                <div id="registro-container" class="bg-input p-4 rounded-lg border border-bordercolor shadow-custom hidden">
+                    <label class="block text-sm font-medium text-skin mb-1.5" data-i18n="labelRegistro">Registro Mercantil (ES/EU)</label>
+                    <input type="text" id="registro" name="registro" data-i18n-placeholder="placeRegistro" placeholder="Ej. Tomo X, Folio Y, Hoja Z" class="w-full p-2.5 border border-mirage rounded-lg focus:ring-2 focus:ring-skin bg-body text-textmain placeholder-textmuted/50 outline-none transition-all" />
+                </div>
+            </form>
+        </section>
+
+        <!-- Right Column: Preview & Actions -->
+        <section class="lg:w-2/3 flex flex-col print:w-full print:m-0 print:p-0">
+            
+            <!-- Action Bar -->
+            <div class="bg-card p-4 rounded-t-xl border border-b-0 border-bordercolor flex flex-wrap gap-4 items-center justify-between print:hidden">
+                <div class="flex items-center gap-2 text-skin text-sm font-code">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span class="i18n-text" data-i18n="previewLabel">Vista previa en tiempo real</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button id="btn-copy" class="flex items-center gap-2 px-4 py-2 bg-input border border-bordercolor hover:border-skin text-textmain text-sm font-medium rounded-lg transition-all" data-i18n="btnCopy">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        <span class="i18n-text">Copiar</span>
+                    </button>
+                    <button id="btn-download" class="flex items-center gap-2 px-4 py-2 bg-input border border-bordercolor hover:border-skin text-textmain text-sm font-medium rounded-lg transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        TXT
+                    </button>
+                    <button id="btn-print" class="flex items-center gap-2 px-4 py-2 bg-[image:var(--gradient-1)] hover:bg-[image:var(--gradient-2)] text-white text-sm font-medium rounded-lg transition-all shadow-glow">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Document Paper Canvas -->
+            <div id="preview-container" class="bg-card p-8 md:p-12 border border-bordercolor rounded-b-xl shadow-custom flex-grow print:border-none print:shadow-none print:p-0 font-sans text-textmuted">
+                <!-- Preview content generated via JS -->
+            </div>
+
+        </section>
+    </main>
+
+    <script>
+        // State
+        const formData = {
+            region: 'do', url: '', nombre: '', rnc: '', direccion: '', email: '', telefono: '', industria: 'general', supervision: '', registro: ''
+        };
+        let isFirstRun = true;
+        let currentLang = 'es'; // default language
+
+        // Elements
+        const form = document.getElementById('legal-form');
+        const inputs = form.querySelectorAll('input, select');
+        const previewContainer = document.getElementById('preview-container');
+        const supervisionContainer = document.getElementById('supervision-container');
+        const registroContainer = document.getElementById('registro-container');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+
+        // i18n Dictionaries
+        const translations = {
+            es: {
+                headerTitle: "Generador de Avisos Legales",
+                headerSubtitle: "Multi-Región y Privacidad",
+                formTitle: "Datos del Documento",
+                labelRegion: "Jurisdicción / Región",
+                regionDo: "República Dominicana (Ley 172-13)",
+                regionEs: "España / Unión Europea (RGPD)",
+                regionUs: "Estados Unidos (General / CCPA)",
+                labelIndustry: "Industria / Tipo de Sitio",
+                indGeneral: "Sitio Web General / Blog",
+                indEcommerce: "Comercio Electrónico / SaaS",
+                indSalud: "Salud y Bienestar (Datos Sensibles)",
+                indFinanciero: "Servicios Financieros / Legales",
+                labelName: "Nombre de la Empresa o Persona",
+                placeName: "Ej. Mi Empresa S.R.L. / LLC",
+                labelRnc: "ID Fiscal (RNC, NIF/CIF, EIN)",
+                placeRnc: "Ej. 130-12345-1 / B12345678",
+                labelUrl: "URL del Sitio Web",
+                placeUrl: "Ej. https://www.miempresa.com",
+                labelAddress: "Dirección Completa",
+                placeAddress: "Ej. Calle Principal 123, Ciudad, País",
+                labelEmail: "Correo Electrónico de Contacto",
+                placeEmail: "Ej. legal@miempresa.com",
+                labelPhone: "Teléfono (Opcional)",
+                placePhone: "Ej. +1 809-555-5555",
+                labelSupervision: "Entidad Supervisora",
+                placeSupervision: "Ej. Superintendencia de Bancos (SIB)",
+                labelRegistro: "Registro Mercantil (ES/EU)",
+                placeRegistro: "Ej. Tomo X, Folio Y, Hoja Z",
+                previewLabel: "Vista previa en tiempo real",
+                btnCopy: "Copiar",
+                toastCopy: "¡Texto copiado al portapapeles!",
+                toastError: "Error al copiar el texto.",
+                toastDownload: "¡Archivo TXT descargado!",
+                toastJurisdiction: "🌍 Jurisdicción cambiada a ",
+                toastEco: "🛍️ Cláusulas E-commerce activadas",
+                toastSalud: "⚕️ Cláusulas de Salud activadas",
+                toastFin: "🏦 Cláusulas Financieras activadas",
+                toastGeneral: "📄 Plantilla General restaurada"
+            },
+            en: {
+                headerTitle: "Legal Notice Generator",
+                headerSubtitle: "Multi-Region & Privacy",
+                formTitle: "Document Details",
+                labelRegion: "Jurisdiction / Region",
+                regionDo: "Dominican Republic (Law 172-13)",
+                regionEs: "Spain / European Union (GDPR)",
+                regionUs: "United States (General / CCPA)",
+                labelIndustry: "Industry / Website Type",
+                indGeneral: "General Website / Blog",
+                indEcommerce: "E-commerce / SaaS",
+                indSalud: "Health & Wellness (Sensitive Data)",
+                indFinanciero: "Financial / Legal Services",
+                labelName: "Company or Individual Name",
+                placeName: "E.g. My Company LLC",
+                labelRnc: "Tax ID (EIN, NIF/CIF, RNC)",
+                placeRnc: "E.g. 12-3456789",
+                labelUrl: "Website URL",
+                placeUrl: "E.g. https://www.mycompany.com",
+                labelAddress: "Full Address",
+                placeAddress: "E.g. 123 Main St, City, Country",
+                labelEmail: "Contact Email",
+                placeEmail: "E.g. legal@mycompany.com",
+                labelPhone: "Phone Number (Optional)",
+                placePhone: "E.g. +1 555-123-4567",
+                labelSupervision: "Supervisory Authority",
+                placeSupervision: "E.g. Financial Conduct Authority (FCA)",
+                labelRegistro: "Commercial Registry (ES/EU)",
+                placeRegistro: "E.g. Volume X, Folio Y, Sheet Z",
+                previewLabel: "Real-time preview",
+                btnCopy: "Copy",
+                toastCopy: "Text copied to clipboard!",
+                toastError: "Error copying text.",
+                toastDownload: "TXT file downloaded!",
+                toastJurisdiction: "🌍 Jurisdiction changed to ",
+                toastEco: "🛍️ E-commerce clauses activated",
+                toastSalud: "⚕️ Health clauses activated",
+                toastFin: "🏦 Financial clauses activated",
+                toastGeneral: "📄 General template restored"
+            }
+        };
+
+        // Language Switch Logic
+        const langSwitch = document.getElementById('lang-switch');
+        const langKnob = document.getElementById('lang-knob');
+        const langEnBtn = document.getElementById('lang-en');
+        const langEsBtn = document.getElementById('lang-es');
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            if (lang === 'en') {
+                langKnob.classList.remove('translate-x-5');
+                langEnBtn.classList.add('text-skin');
+                langEnBtn.classList.remove('text-textmuted');
+                langEsBtn.classList.add('text-textmuted');
+                langEsBtn.classList.remove('text-skin');
+            } else {
+                langKnob.classList.add('translate-x-5');
+                langEsBtn.classList.add('text-skin');
+                langEsBtn.classList.remove('text-textmuted');
+                langEnBtn.classList.add('text-textmuted');
+                langEnBtn.classList.remove('text-skin');
+            }
+            updateUITexts();
+            renderPreview();
+        }
+
+        langSwitch.addEventListener('click', () => setLanguage(currentLang === 'es' ? 'en' : 'es'));
+        langEnBtn.addEventListener('click', () => setLanguage('en'));
+        langEsBtn.addEventListener('click', () => setLanguage('es'));
+
+        function updateUITexts() {
+            const t = translations[currentLang];
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) {
+                    if (el.tagName === 'OPTION') { el.textContent = t[key]; } 
+                    else if (el.querySelector('.i18n-text')) { el.querySelector('.i18n-text').textContent = t[key]; } 
+                    else { el.textContent = t[key]; }
+                }
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (t[key]) el.placeholder = t[key];
+            });
+
+            // Update dropdowns explicitly to preserve values
+            const regSel = document.getElementById('region');
+            regSel.querySelector('option[value="do"]').textContent = t.regionDo;
+            regSel.querySelector('option[value="es"]').textContent = t.regionEs;
+            regSel.querySelector('option[value="us"]').textContent = t.regionUs;
+
+            const indSel = document.getElementById('industria');
+            indSel.querySelector('option[value="general"]').textContent = t.indGeneral;
+            indSel.querySelector('option[value="ecommerce"]').textContent = t.indEcommerce;
+            indSel.querySelector('option[value="salud"]').textContent = t.indSalud;
+            indSel.querySelector('option[value="financiero"]').textContent = t.indFinanciero;
+        }
+
+        // Toast logic
+        let toastTimeout;
+        function showToast(messageKey, appendText = '') {
+            const text = translations[currentLang][messageKey] ? translations[currentLang][messageKey] + appendText : messageKey;
+            toastMessage.textContent = text;
+            toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-[-20px]');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-[-20px]');
+            }, 3000);
+        }
+
+        // Generator Functions
+        function getDocumentText(data, isPreview = false) {
+            return currentLang === 'es' ? generateSpanishTemplate(data, isPreview) : generateEnglishTemplate(data, isPreview);
+        }
+
+        function generateSpanishTemplate(data, isPreview) {
+            const { region, url, nombre, rnc, direccion, email, telefono, industria, supervision, registro } = data;
+
+            const badgeEco = isPreview ? ' ::BADGE_ECO::' : '';
+            const badgeSalud = isPreview ? ' ::BADGE_SALUD::' : '';
+            const badgeFin = isPreview ? ' ::BADGE_FIN::' : '';
+
+            const pUrl = url || 'https://www.ejemplo.com';
+            const pNombre = nombre || '[Nombre de la Empresa]';
+            const pRnc = rnc || '[ID Fiscal]';
+            const pDireccion = direccion || '[Dirección Completa]';
+            const pEmail = email || '[Correo Electrónico]';
+            const pTelefono = telefono || '[Teléfono]';
+            const pRegistro = registro || '[Detalles de Registro Mercantil, ej: Tomo X, Folio Y]';
+            
+            let text = '';
+
+            if (region === 'es') {
+                text += `**Título del Documento: AVISO LEGAL, TÉRMINOS DE USO Y POLÍTICA DE PRIVACIDAD**\n\n`;
+                text += `Este documento regula el uso del sitio web ${pUrl} (en adelante, el "SITIO WEB") propiedad de ${pNombre} (en adelante, la "EMPRESA").\n\n`;
+                text += `--- \n\n`;
+                text += `### PARTE 1: AVISO LEGAL Y CONDICIONES DE USO\n\n`;
+                text += `#### 1. DATOS IDENTIFICATIVOS DE LA EMPRESA\n\n`;
+                text += `En cumplimiento del deber de información recogido en el artículo 10 de la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la Información y del Comercio Electrónico, se le informa que:\n\n`;
+                text += `- **Nombre/Razón Social:** ${pNombre}\n`;
+                text += `- **NIF/CIF:** ${pRnc}\n`;
+                text += `- **Domicilio Social:** ${pDireccion}\n`;
+                text += `- **Correo Electrónico:** ${pEmail}\n`;
+                text += `- **Teléfono:** ${pTelefono}\n`;
+                text += `- **Datos de Registro Mercantil:** ${pRegistro}\n\n`;
+                text += `#### 2. OBJETO Y ÁMBITO DE APLICACIÓN\n\n`;
+                text += `Estas condiciones regulan el acceso, navegación y uso del SITIO WEB, así como las responsabilidades derivadas de la utilización de sus contenidos. El acceso al mismo implica la aceptación por el usuario (en adelante, el "USUARIO") de todas sus condiciones.\n\n`;
+                text += `#### 3. PROPIEDAD INTELECTUAL E INDUSTRIAL\n\n`;
+                text += `Todos los derechos sobre el SITIO WEB y sus contenidos pertenecen a la EMPRESA. Queda terminantemente prohibida la reproducción, distribución o comunicación pública, total o parcial, sin autorización.\n\n`;
+                text += `#### 4. OBLIGACIONES DEL USUARIO\n\n`;
+                text += `El USUARIO se compromete a usar el SITIO WEB de conformidad con la ley, la moral y el orden público, absteniéndose de utilizarlo con fines ilícitos o lesivos para terceros.\n\n`;
+
+                if (industria === 'ecommerce') {
+                    text += `#### 4.1 REGISTRO Y SEGURIDAD DE LA CUENTA${badgeEco}\n\n`;
+                    text += `Para acceder a ciertos servicios, el USUARIO deberá registrarse y es responsable de mantener la confidencialidad de su contraseña.\n\n`;
+                    text += `#### 4.2 CONDICIONES DE PAGO Y VENTA${badgeEco}\n\n`;
+                    text += `Para servicios de pago, el USUARIO acepta las tarifas y términos de facturación vigentes. Los pagos se procesan mediante pasarelas seguras de terceros y la EMPRESA no almacena datos de tarjetas de crédito.\n\n`;
+                }
+
+                let nextIdx = 5;
+                if (industria === 'salud') {
+                    text += `#### ${nextIdx}. DESCARGO DE RESPONSABILIDAD MÉDICA${badgeSalud}\n\n`;
+                    text += `La información proporcionada en este SITIO WEB es puramente informativa y no sustituye el consejo, diagnóstico o tratamiento médico profesional.\n\n`;
+                    nextIdx++;
+                } else if (industria === 'financiero') {
+                    text += `#### ${nextIdx}. SIN ASESORAMIENTO PROFESIONAL${badgeFin}\n\n`;
+                    text += `El contenido de este SITIO WEB es de carácter informativo general y no constituye asesoramiento legal, financiero o tributario.\n\n`;
+                    nextIdx++;
+                }
+
+                text += `#### ${nextIdx}. LEY APLICABLE Y JURISDICCIÓN\n\n`;
+                text += `Estas condiciones se rigen por la legislación española. Las partes se someten a los juzgados y tribunales del domicilio del USUARIO, o de la EMPRESA en su defecto.\n\n`;
+                text += `--- \n\n`;
+                text += `### PARTE 2: POLÍTICA DE PRIVACIDAD (Cumplimiento RGPD)\n\n`;
+                text += `#### 1. RESPONSABLE DEL TRATAMIENTO\n\n`;
+                text += `La EMPRESA (${pNombre}, NIF: ${pRnc}) es responsable del tratamiento de los datos recabados en este SITIO WEB.\n\n`;
+                text += `#### 2. FINALIDAD DEL TRATAMIENTO Y LEGITIMACIÓN\n\n`;
+                text += `Sus datos se utilizan para gestionar consultas, prestar los servicios contratados, y enviar comunicaciones si ha dado su consentimiento explícito.\n`;
+                if (industria === 'salud') text += `Al tratar datos sensibles relacionados con la salud, nos basamos estrictamente en su consentimiento explícito.${badgeSalud}\n`;
+                text += `\n#### 3. DERECHOS DE LOS USUARIOS\n\n`;
+                text += `Puede ejercer sus derechos de acceso, rectificación, supresión, limitación, portabilidad y oposición dirigiéndose a ${pEmail}.\n`;
+
+            } else if (region === 'us') {
+                text += `**Título del Documento: TÉRMINOS DE SERVICIO Y POLÍTICA DE PRIVACIDAD**\n\n`;
+                text += `Estos términos rigen el uso del sitio web de ${pNombre}, ubicado en ${pUrl}.\n\n`;
+                text += `--- \n\n`;
+                text += `### PARTE 1: TÉRMINOS DE SERVICIO\n\n`;
+                text += `#### 1. ACEPTACIÓN DE LOS TÉRMINOS\n\n`;
+                text += `Al acceder a este sitio web asumimos que acepta estos términos en su totalidad. No continúe utilizando ${pUrl} si no está de acuerdo.\n\n`;
+                text += `#### 2. PROPIEDAD INTELECTUAL\n\n`;
+                text += `A menos que se indique lo contrario, ${pNombre} y/o sus licenciantes poseen los derechos de propiedad intelectual de todo el material del sitio.\n\n`;
+
+                if (industria === 'ecommerce') {
+                    text += `#### 3. COMPRAS Y PAGOS${badgeEco}\n\n`;
+                    text += `Si desea comprar productos/servicios, se le podrá pedir información relevante como tarjeta de crédito y dirección de facturación. Usted es responsable de la seguridad de su cuenta.\n\n`;
+                }
+
+                let nextUsIdx = industria === 'ecommerce' ? 4 : 3;
+
+                text += `#### ${nextUsIdx}. LIMITACIÓN DE RESPONSABILIDAD\n\n`;
+                text += `En la medida máxima permitida por la ley aplicable, excluimos todas las representaciones y garantías relacionadas con nuestro sitio web.\n\n`;
+                nextUsIdx++;
+
+                if (industria === 'salud') {
+                    text += `#### ${nextUsIdx}. EXENCIÓN DE RESPONSABILIDAD MÉDICA${badgeSalud}\n\n`;
+                    text += `Este sitio ofrece información de salud diseñada únicamente para fines educativos y no reemplaza el consejo médico profesional.\n\n`;
+                } else if (industria === 'financiero') {
+                    text += `#### ${nextUsIdx}. EXENCIÓN DE RESPONSABILIDAD FINANCIERA${badgeFin}\n\n`;
+                    text += `La información aquí contenida no pretende ser ni debe interpretarse como asesoramiento financiero profesional.\n\n`;
+                }
+
+                text += `--- \n\n`;
+                text += `### PARTE 2: POLÍTICA DE PRIVACIDAD (Incluye derechos CCPA)\n\n`;
+                text += `#### 1. RECOPILACIÓN Y USO DE LA INFORMACIÓN\n\n`;
+                text += `Recopilamos datos personales (nombre, email, teléfono, dirección) y datos de uso para proporcionar y mejorar nuestro Servicio.\n\n`;
+                text += `#### 2. DERECHOS CCPA (Residentes de California)\n\n`;
+                text += `Si es residente de California, tiene derecho a saber qué datos recopilamos, solicitar su eliminación y optar por no vender su información (no vendemos datos personales). Contáctenos en ${pEmail}.\n`;
+
+            } else {
+                // República Dominicana (Original Español)
+                text += `**Título del Documento: AVISO LEGAL, CONDICIONES DE USO Y POLÍTICA DE PRIVACIDAD**\n\n`;
+                text += `Este documento regula el uso del sitio web ${pUrl} (en adelante, el "SITIO WEB") propiedad de ${pNombre} (en adelante, la "EMPRESA").\n\n`;
+                text += `--- \n\n`;
+                text += `### PARTE 1: AVISO LEGAL Y CONDICIONES DE USO\n\n`;
+                text += `#### 1. DATOS IDENTIFICATIVOS\n\n`;
+                text += `En cumplimiento con el deber de información (Ley No. 126-01 y Ley No. 200-04), se informa:\n\n`;
+                text += `- **Razón Social:** ${pNombre}\n`;
+                text += `- **RNC:** ${pRnc}\n`;
+                text += `- **Domicilio:** ${pDireccion}\n`;
+                text += `- **Email:** ${pEmail}\n`;
+                text += `- **Teléfono:** ${pTelefono}\n`;
+                if (industria === 'financiero') {
+                    text += `- **Supervisión y Regulación:** ${supervision || '[Entidad supervisora]'}${badgeFin}\n`;
+                }
+                text += `\n#### 2. PROPIEDAD INTELECTUAL E INDUSTRIAL\n\n`;
+                text += `Conforme a la Ley No. 65-00 sobre Derecho de Autor, todos los contenidos son titularidad exclusiva de la EMPRESA. Queda prohibida su reproducción sin autorización.\n\n`;
+
+                if (industria === 'ecommerce') {
+                    text += `#### 3. COMERCIO ELECTRÓNICO Y SEGURIDAD${badgeEco}\n\n`;
+                    text += `El USUARIO se compromete a proporcionar información veraz al crear una cuenta y asume la responsabilidad de la confidencialidad de sus credenciales.\n\n`;
+                }
+
+                let nextDoIdx = industria === 'ecommerce' ? 4 : 3;
+
+                text += `#### ${nextDoIdx}. EXCLUSIÓN DE RESPONSABILIDAD\n\n`;
+                text += `La EMPRESA no garantiza la disponibilidad continua del SITIO WEB ni se hace responsable de daños causados por virus o caídas del sistema.\n\n`;
+                nextDoIdx++;
+
+                if (industria === 'salud') {
+                    text += `#### ${nextDoIdx}. DESCARGO MÉDICO${badgeSalud}\n\n`;
+                    text += `La información provista es con fines educativos y no reemplaza la consulta con un profesional de la salud acreditado.\n\n`;
+                    nextDoIdx++;
+                }
+                
+                text += `#### ${nextDoIdx}. LEGISLACIÓN Y JURISDICCIÓN\n\n`;
+                text += `Estas condiciones se rigen por las leyes de la República Dominicana, sometiéndose las partes a sus tribunales competentes.\n\n`;
+                
+                text += `--- \n\n`;
+                text += `### PARTE 2: POLÍTICA DE PRIVACIDAD (Ley No. 172-13)\n\n`;
+                text += `#### 1. FINALIDAD DEL TRATAMIENTO\n\n`;
+                text += `Tratamos sus datos para responder a consultas, gestionar servicios`;
+                if (industria === 'ecommerce') text += `, procesar compras y facturación electrónica (e-CF)${badgeEco}`;
+                if (industria === 'salud') text += `, y gestionar historiales clínicos de acuerdo a los más estrictos estándares de confidencialidad${badgeSalud}`;
+                text += `.\n\n`;
+                text += `#### 2. DERECHOS ARCO\n\n`;
+                text += `De acuerdo a la Ley 172-13, el usuario tiene derechos de Acceso, Rectificación, Cancelación y Oposición sobre sus datos, ejercitables a través de ${pEmail}.\n`;
+            }
+            return text;
+        }
+
+        function generateEnglishTemplate(data, isPreview) {
+            const { region, url, nombre, rnc, direccion, email, telefono, industria, supervision, registro } = data;
+
+            const badgeEco = isPreview ? ' ::BADGE_ECO::' : '';
+            const badgeSalud = isPreview ? ' ::BADGE_SALUD::' : '';
+            const badgeFin = isPreview ? ' ::BADGE_FIN::' : '';
+
+            const pUrl = url || 'https://www.example.com';
+            const pNombre = nombre || '[Company Name]';
+            const pRnc = rnc || '[Tax ID]';
+            const pDireccion = direccion || '[Full Address]';
+            const pEmail = email || '[Email Address]';
+            const pTelefono = telefono || '[Phone Number]';
+            const pRegistro = registro || '[Commercial Registry Details]';
+
+            let text = '';
+
+            if (region === 'es') {
+                text += `**Document Title: LEGAL NOTICE, TERMS OF USE, AND PRIVACY POLICY**\n\n`;
+                text += `This document regulates the use of the website ${pUrl} (hereinafter, the "WEBSITE") owned by ${pNombre} (hereinafter, the "COMPANY").\n\n`;
+                text += `--- \n\n`;
+                text += `### PART 1: LEGAL NOTICE & TERMS OF USE\n\n`;
+                text += `#### 1. IDENTIFICATION DETAILS OF THE COMPANY\n\n`;
+                text += `In compliance with the duty of information contained in Article 10 of Law 34/2002, of July 11, on Information Society Services and Electronic Commerce (Spain), we inform you that:\n\n`;
+                text += `- **Company Name:** ${pNombre}\n`;
+                text += `- **Tax ID (NIF/CIF):** ${pRnc}\n`;
+                text += `- **Registered Address:** ${pDireccion}\n`;
+                text += `- **Email:** ${pEmail}\n`;
+                text += `- **Phone:** ${pTelefono}\n`;
+                text += `- **Commercial Registry:** ${pRegistro}\n\n`;
+                text += `#### 2. OBJECT AND SCOPE\n\n`;
+                text += `These conditions regulate access, browsing, and use of the WEBSITE. Accessing it implies full acceptance by the user (hereinafter, the "USER").\n\n`;
+                text += `#### 3. INTELLECTUAL PROPERTY\n\n`;
+                text += `All intellectual and industrial property rights over the WEBSITE belong to the COMPANY. Reproduction, distribution, or public communication without authorization is prohibited.\n\n`;
+                
+                if (industria === 'ecommerce') {
+                    text += `#### 4. ACCOUNT REGISTRATION AND PAYMENTS${badgeEco}\n\n`;
+                    text += `The USER is responsible for maintaining the confidentiality of their account. Payments are processed securely via third-party gateways.\n\n`;
+                }
+
+                let nextIdx = industria === 'ecommerce' ? 5 : 4;
+                if (industria === 'salud') {
+                    text += `#### ${nextIdx}. MEDICAL DISCLAIMER${badgeSalud}\n\n`;
+                    text += `Information provided on this WEBSITE is for educational purposes only and is not a substitute for professional medical advice.\n\n`;
+                    nextIdx++;
+                } else if (industria === 'financiero') {
+                    text += `#### ${nextIdx}. NO PROFESSIONAL ADVICE DISCLAIMER${badgeFin}\n\n`;
+                    text += `Content on this WEBSITE is for general informational purposes and does not constitute legal, financial, or tax advice.\n\n`;
+                    nextIdx++;
+                }
+
+                text += `#### ${nextIdx}. GOVERNING LAW AND JURISDICTION\n\n`;
+                text += `These conditions are governed by Spanish law. Disputes will be submitted to the courts of the USER's domicile.\n\n`;
+                text += `--- \n\n`;
+                text += `### PART 2: PRIVACY POLICY (GDPR Compliant)\n\n`;
+                text += `#### 1. DATA CONTROLLER\n\n`;
+                text += `The COMPANY (${pNombre}, ID: ${pRnc}) is responsible for processing data collected on this site.\n\n`;
+                text += `#### 2. PURPOSE OF DATA PROCESSING\n\n`;
+                text += `Data is used to manage inquiries, provide services, and send communications with explicit consent.\n`;
+                if (industria === 'salud') text += `Handling sensitive health data is done strictly under your explicit consent.${badgeSalud}\n`;
+                text += `\n#### 3. USER RIGHTS\n\n`;
+                text += `You may exercise your rights of access, rectification, deletion, limitation, and opposition by contacting ${pEmail}.\n`;
+
+            } else if (region === 'us') {
+                text += `**Document Title: TERMS OF SERVICE AND PRIVACY POLICY**\n\n`;
+                text += `These terms outline the rules and regulations for the use of ${pNombre}'s Website, located at ${pUrl}.\n\n`;
+                text += `--- \n\n`;
+                text += `### PART 1: TERMS OF SERVICE\n\n`;
+                text += `#### 1. ACCEPTANCE OF TERMS\n\n`;
+                text += `By accessing this website, we assume you accept these terms completely. Do not continue to use ${pUrl} if you do not agree.\n\n`;
+                text += `#### 2. INTELLECTUAL PROPERTY\n\n`;
+                text += `Unless otherwise stated, ${pNombre} and/or its licensors own the intellectual property rights for all material on the website.\n\n`;
+
+                if (industria === 'ecommerce') {
+                    text += `#### 3. PURCHASES AND PAYMENTS${badgeEco}\n\n`;
+                    text += `If you wish to purchase any product or service, you may be asked to supply relevant information. You are responsible for account security.\n\n`;
+                }
+
+                let nextUsIdx = industria === 'ecommerce' ? 4 : 3;
+
+                text += `#### ${nextUsIdx}. DISCLAIMER\n\n`;
+                text += `To the maximum extent permitted by applicable law, we exclude all representations, warranties and conditions relating to our website.\n\n`;
+                nextUsIdx++;
+
+                if (industria === 'salud') {
+                    text += `#### ${nextUsIdx}. MEDICAL DISCLAIMER${badgeSalud}\n\n`;
+                    text += `This site offers health information for educational purposes only. You should not rely on this information as a substitute for professional medical advice.\n\n`;
+                } else if (industria === 'financiero') {
+                    text += `#### ${nextUsIdx}. FINANCIAL DISCLAIMER${badgeFin}\n\n`;
+                    text += `Information contained on this Website is not intended as, and shall not be understood or construed as, financial advice.\n\n`;
+                }
+
+                text += `--- \n\n`;
+                text += `### PART 2: PRIVACY POLICY (Including CCPA rights)\n\n`;
+                text += `#### 1. INFORMATION COLLECTION\n\n`;
+                text += `We collect Personal Data (such as Email, Name, Phone number) and Usage Data to provide and improve our Service.\n\n`;
+                text += `#### 2. CALIFORNIA CONSUMER PRIVACY ACT (CCPA) RIGHTS\n\n`;
+                text += `If you are a California resident, you have the right to learn what data we collect, ask to delete it and not to sell it (we do not sell your personal information). Contact us at ${pEmail}.\n`;
+
+            } else {
+                // Dominican Republic (English)
+                text += `**Document Title: LEGAL NOTICE, TERMS OF USE AND PRIVACY POLICY**\n\n`;
+                text += `This document regulates the use of the website ${pUrl} (hereinafter, the "WEBSITE") owned by ${pNombre} (hereinafter, the "COMPANY").\n\n`;
+                text += `--- \n\n`;
+                text += `### PART 1: LEGAL NOTICE & TERMS OF USE\n\n`;
+                text += `#### 1. IDENTIFICATION DETAILS\n\n`;
+                text += `In compliance with the duty of information (Law No. 126-01 and Law No. 200-04 of the Dominican Republic), we inform you:\n\n`;
+                text += `- **Company Name:** ${pNombre}\n`;
+                text += `- **National Taxpayer Registry (RNC):** ${pRnc}\n`;
+                text += `- **Address:** ${pDireccion}\n`;
+                text += `- **Email:** ${pEmail}\n`;
+                text += `- **Phone:** ${pTelefono}\n`;
+                if (industria === 'financiero') {
+                    text += `- **Supervision and Regulation:** ${supervision || '[Supervisory entity]'}${badgeFin}\n`;
+                }
+                text += `\n#### 2. INTELLECTUAL PROPERTY\n\n`;
+                text += `In accordance with Law No. 65-00 on Copyright, all contents are the exclusive property of the COMPANY. Reproduction is strictly prohibited without authorization.\n\n`;
+
+                if (industria === 'ecommerce') {
+                    text += `#### 3. E-COMMERCE AND SECURITY${badgeEco}\n\n`;
+                    text += `The USER agrees to provide accurate information when creating an account and assumes responsibility for the confidentiality of their credentials.\n\n`;
+                }
+
+                let nextDoIdx = industria === 'ecommerce' ? 4 : 3;
+
+                text += `#### ${nextDoIdx}. EXCLUSION OF LIABILITY\n\n`;
+                text += `The COMPANY does not guarantee continuous availability of the WEBSITE and is not liable for damages caused by viruses or system downtime.\n\n`;
+                nextDoIdx++;
+
+                if (industria === 'salud') {
+                    text += `#### ${nextDoIdx}. MEDICAL DISCLAIMER${badgeSalud}\n\n`;
+                    text += `The information provided is for educational purposes and does not replace consultation with a certified health professional.\n\n`;
+                    nextDoIdx++;
+                }
+                
+                text += `#### ${nextDoIdx}. GOVERNING LAW AND JURISDICTION\n\n`;
+                text += `These conditions are governed by the laws of the Dominican Republic, and parties submit to its competent courts.\n\n`;
+                
+                text += `--- \n\n`;
+                text += `### PART 2: PRIVACY POLICY (Law No. 172-13)\n\n`;
+                text += `#### 1. PURPOSE OF DATA PROCESSING\n\n`;
+                text += `We process your data to respond to inquiries, manage services`;
+                if (industria === 'ecommerce') text += `, process purchases, and generate electronic invoicing (e-CF)${badgeEco}`;
+                if (industria === 'salud') text += `, and manage medical records according to the strictest confidentiality standards${badgeSalud}`;
+                text += `.\n\n`;
+                text += `#### 2. USER RIGHTS\n\n`;
+                text += `According to Law 172-13, the user has the rights to Access, Rectify, Cancel, and Oppose their data, exercisable via ${pEmail}.\n`;
+            }
+
+            return text;
+        }
+
+        // Markdown Parser for HTML insertion
+        function renderInlineFormatting(text) {
+            return text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-textinverse">$1</strong>');
+        }
+
+        function parseBadges(text) {
+            let content = text;
+            let badgeHtml = '';
+            const t = translations[currentLang];
+
+            if (content.includes('::BADGE_ECO::')) {
+                content = content.replace('::BADGE_ECO::', '');
+                const label = currentLang === 'es' ? 'E-commerce' : 'E-commerce';
+                badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-mirage border border-bordercolor text-skin uppercase tracking-wider print:hidden">${label}</span>`;
+            } else if (content.includes('::BADGE_SALUD::')) {
+                content = content.replace('::BADGE_SALUD::', '');
+                const label = currentLang === 'es' ? 'Salud' : 'Health';
+                badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-mirage border border-bordercolor text-chartpending uppercase tracking-wider print:hidden">${label}</span>`;
+            } else if (content.includes('::BADGE_FIN::')) {
+                content = content.replace('::BADGE_FIN::', '');
+                const label = currentLang === 'es' ? 'Financiero' : 'Financial';
+                badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-mirage border border-bordercolor text-success uppercase tracking-wider print:hidden">${label}</span>`;
+            }
+            return { content, badgeHtml };
+        }
+
+        function renderPreview() {
+            const rawText = getDocumentText(formData, true);
+            const lines = rawText.split('\n');
+            let htmlContent = '';
+
+            lines.forEach(line => {
+                if (line.startsWith('#### ')) {
+                    const { content, badgeHtml } = parseBadges(line.replace('#### ', ''));
+                    htmlContent += `<h4 class="text-lg font-bold text-textmain mt-6 mb-2 flex flex-wrap items-center gap-2">${renderInlineFormatting(content)}${badgeHtml}</h4>`;
+                } else if (line.startsWith('### ')) {
+                    htmlContent += `<h3 class="text-xl font-bold text-skin font-tech mt-8 mb-4 border-b border-bordercolor pb-2">${line.replace('### ', '')}</h3>`;
+                } else if (line.startsWith('- ')) {
+                    const { content, badgeHtml } = parseBadges(line.substring(2));
+                    htmlContent += `<li class="ml-6 list-disc mb-1 text-textmuted flex flex-wrap items-center gap-2"><span>${renderInlineFormatting(content)}</span>${badgeHtml}</li>`;
+                } else if (line.trim() === '---') {
+                    htmlContent += `<hr class="my-8 border-bordercolor" />`;
+                } else if (line.trim() === '') {
+                    htmlContent += `<div class="h-2"></div>`;
+                } else {
+                    htmlContent += `<p class="mb-3 text-textmuted text-justify leading-relaxed">${renderInlineFormatting(line)}</p>`;
+                }
+            });
+
+            previewContainer.innerHTML = htmlContent;
+        }
+
+        // Event Listeners for form updates
+        inputs.forEach(input => {
+            input.addEventListener('input', (e) => {
+                const { name, value, selectedIndex } = e.target;
+                formData[name] = value;
+
+                if (name === 'region') {
+                    if (value === 'es') {
+                        registroContainer.classList.remove('hidden');
+                    } else {
+                        registroContainer.classList.add('hidden');
+                        formData.registro = '';
+                        document.getElementById('registro').value = '';
+                    }
+                    if (!isFirstRun) {
+                        const t = translations[currentLang];
+                        let optText = value === 'es' ? t.regionEs : (value === 'do' ? t.regionDo : t.regionUs);
+                        showToast('toastJurisdiction', optText);
+                    }
+                }
+
+                if (name === 'industria') {
+                    if (value === 'financiero') {
+                        supervisionContainer.classList.remove('hidden');
+                    } else {
+                        supervisionContainer.classList.add('hidden');
+                        formData.supervision = ''; 
+                        document.getElementById('supervision').value = '';
+                    }
+
+                    if (!isFirstRun) {
+                        if (value === 'ecommerce') showToast('toastEco');
+                        else if (value === 'salud') showToast('toastSalud');
+                        else if (value === 'financiero') showToast('toastFin');
+                        else showToast('toastGeneral');
+                    }
+                }
+                
+                isFirstRun = false;
+                renderPreview();
+            });
+        });
+
+        // Actions
+        document.getElementById('btn-copy').addEventListener('click', () => {
+            const textToCopy = getDocumentText(formData, false); 
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('toastCopy');
+            } catch (err) {
+                showToast('toastError');
+            }
+            document.body.removeChild(textarea);
+        });
+
+        document.getElementById('btn-download').addEventListener('click', () => {
+            const textToDownload = getDocumentText(formData, false);
+            const blob = new Blob([textToDownload], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentLang === 'es' ? 'aviso_legal_y_privacidad.txt' : 'legal_notice_and_privacy.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('toastDownload');
+        });
+
+        document.getElementById('btn-print').addEventListener('click', () => {
+            window.print();
+        });
+
+        // Initialize state
+        updateUITexts();
+        renderPreview();
+    </script>
+</body>
+</html>
